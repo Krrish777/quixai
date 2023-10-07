@@ -1,0 +1,23 @@
+@media screen and (max-width: 1000px) {
+  .im {
+    display: none;
+  }
+  .grd {
+    grid-template-columns: 1fr;
+  }
+  .sig {
+    height: 100vh;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .w {
+    width: 100vw;
+    padding: 1rem;
+    padding: 1rem;
+  }
+}
+
+.w {
+  width: 350px;
+}

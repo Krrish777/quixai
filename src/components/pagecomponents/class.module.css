@@ -1,0 +1,36 @@
+.grid {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 1rem;
+}
+
+.id svg {
+  max-width: 3rem;
+}
+
+.id {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  justify-content: flex-start;
+  padding: 1rem;
+}
+
+@media screen and (max-width: 920px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .grid {
+    padding: 1rem;
+    grid-template-columns: 1fr;
+  }
+  .id {
+    gap: 1rem;
+    padding: 0.7rem;
+  }
+}

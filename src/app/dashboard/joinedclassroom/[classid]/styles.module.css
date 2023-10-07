@@ -1,0 +1,74 @@
+@media screen and (max-width: 700px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 540px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .bell {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .inp {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .pg2 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pg3 {
+    margin: 0px;
+  }
+
+  .clscd {
+    display: none;
+  }
+  .plus {
+    display: none;
+  }
+
+  .pas {
+    padding: 10px;
+  }
+  .clsname {
+    font-size: 1.2rem;
+  }
+  .cpnam {
+    font-size: 0.8rem;
+  }
+
+  .padd {
+    padding: 1rem;
+  }
+}
+
+.inp {
+  display: flex;
+  gap: 1rem;
+}
+
+
+@media screen and (max-width: 1400px) {
+  .tbc {
+    max-width: 85vw;
+  }
+}
