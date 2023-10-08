@@ -31,6 +31,7 @@ import TFEditor from "./TFeditor";
 import FillinblanksEditor from "./FillinblanksEditor";
 import { FunctionCallHandler } from "ai";
 import { toast } from "@/components/ui/use-toast";
+import Shortanswerseditor from "./Shortanswerseditor";
 
 type Question = {
   question: string;
@@ -47,7 +48,7 @@ const formSchema = z.object({
   name: z
     .string()
     .min(2, {
-      message: "Topic must be at least 1 characters.",
+      message: "Topic must be at least 2 characters.",
     })
     .max(40, {
       message: "Topic must be at most 40 characters.",
@@ -84,6 +85,7 @@ export default function ProfileForm() {
   const [Mcqarray, setMcqarray] = useState<Question[]>([]);
   const [TFarray, setTFarray] = useState<TF[]>([]);
   const [FIBarray, setFIBarray] = useState<TF[]>([]);
+  const [shortanswersarray, setshortanswersarray] = useState<TF[]>([]);
 
   useEffect(() => {
     setFormState("initial");
@@ -122,6 +124,16 @@ export default function ProfileForm() {
         const questionsArray = parsedFunctionCallArguments.questions;
 
         setFIBarray(questionsArray);
+
+        console.log(parsedFunctionCallArguments);
+      }
+    } else if (functionCall.name === "Create_short_question_and_answer") {
+      if (functionCall.arguments) {
+        console.log(functionCall.arguments);
+        const parsedFunctionCallArguments = JSON.parse(functionCall.arguments);
+        const questionsArray = parsedFunctionCallArguments.questions;
+
+        setshortanswersarray(questionsArray);
 
         console.log(parsedFunctionCallArguments);
       }
@@ -175,12 +187,17 @@ export default function ProfileForm() {
       const prompt = `create ${values.noquestions} ${values.difficulty} Fill in the blanks question about topic ${values.topic}`;
       setMessages([]);
       await append({ content: prompt, role: "user" });
+    } else if (querydata === "Shortanswers") {
+      const prompt = `create ${values.noquestions} ${values.difficulty} short question and answer type question about topic ${values.topic}`;
+      setMessages([]);
+      await append({ content: prompt, role: "user" });
     } else {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
+        description: "Reload the page and try again later",
       });
+      return;
     }
   }
 
@@ -320,6 +337,17 @@ export default function ProfileForm() {
           topic={topic}
           querydata={querydata}
           completion={FIBarray}
+          formState={formState}
+          setFormState={setFormState}
+          assignmentname={assignmentname}
+        />
+      ) : querydata === "Shortanswers" ? (
+        <Shortanswerseditor
+          difficulty={difficulty}
+          noquestions={noquestions}
+          topic={topic}
+          querydata={querydata}
+          completion={shortanswersarray}
           formState={formState}
           setFormState={setFormState}
           assignmentname={assignmentname}

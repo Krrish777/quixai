@@ -25,6 +25,14 @@ import { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, {
+      message: "Topic must be at least 2 characters.",
+    })
+    .max(40, {
+      message: "Topic must be at most 40 characters.",
+    }),
   topic: z
     .string()
     .min(2, {
@@ -56,6 +64,7 @@ export default function ProfileForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       topic: "",
       instructions: "",
       totalmarks: 10,
@@ -68,17 +77,24 @@ export default function ProfileForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setloading(true);
     const Datatobeadded = {
+      assignmentname: values.name,
       topic: values.topic,
+      Questiontype: "WrittenAssignment",
       instructions: values.instructions,
       totalmarks: values.totalmarks,
-      Questiontype: "WrittenAssignment",
     };
-    if (values.topic && values.instructions && values.totalmarks) {
+    if (
+      values.topic &&
+      values.instructions &&
+      values.totalmarks &&
+      values.name
+    ) {
       try {
         await addDoc(
           collection(db, `Classrooms/${classid}/Assignment`),
           Datatobeadded
         ).then(() => {
+          setloading(false);
           router.push(`/dashboard/createdclassroom/${classid}/assignment`);
         });
       } catch (error) {
@@ -108,7 +124,7 @@ export default function ProfileForm() {
         <div>
           <h3 className="text-lg font-medium">Written assignment</h3>
           <p className="text-sm text-muted-foreground">
-            Send assignment that needs to be submitted in written format
+            Submit written assignments
           </p>
         </div>
         <Separator />
@@ -118,14 +134,30 @@ export default function ProfileForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
-              name="topic"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Assignment name</FormLabel>
                   <FormControl>
+                    <Input placeholder="Ex:Assignment 6" {...field} />
+                  </FormControl>
+                  <FormDescription>Enter the Assignment name</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="topic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic</FormLabel>
+                  <FormControl>
                     <Input placeholder="Enter topic" {...field} />
                   </FormControl>
-                  <FormDescription>Enter ther Assignment name</FormDescription>
+                  <FormDescription>
+                    Enter the Topic of Assignment
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

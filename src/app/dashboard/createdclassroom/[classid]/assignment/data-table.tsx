@@ -25,6 +25,7 @@ import { DataTableToolbar } from "./data-table-toolbar";
 import React from "react";
 import { Button } from "@/components/ui/button";
 // import { ColumnDef } from "@tanstack/react-table";
+import { useParams } from "next/navigation";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -36,6 +37,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { deleteDoc, doc } from "@firebase/firestore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Question = {
   question: string;
@@ -45,6 +59,7 @@ type Question = {
 
 type AssignmentsData = {
   id: string;
+  assignmentname: string;
   topic: string;
   noquestions: number;
   difficulty: string;
@@ -65,19 +80,42 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [open, setOpen] = React.useState<boolean>(false);
+  const [deletingassignmentid, setdeletingassignmentid] =
+    React.useState<string>();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const pathname = usePathname();
+  const params = useParams();
+  const classid = params.classid;
+
+  async function deleteAssignmentData(): Promise<void> {
+    try {
+      if (classid && deletingassignmentid) {
+        const assignmentRef = doc(
+          db,
+          `Classrooms/${classid}/Assignment`,
+          deletingassignmentid
+        );
+        await deleteDoc(assignmentRef);
+      } else {
+        console.log(deletingassignmentid);
+      }
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+      throw new Error("Failed to delete assignment");
+    }
+  }
 
   const columns: ColumnDef<AssignmentsData>[] = [
     {
-      accessorKey: "topic",
+      accessorKey: "assignmentname",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Topic
+            Assignment name
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -141,8 +179,15 @@ export function DataTable<TData, TValue>({
                 <DropdownMenuItem>View detailed assignment</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Hide assignment</DropdownMenuItem>
-              <DropdownMenuItem>Delete Assignment</DropdownMenuItem>
+              <DropdownMenuItem disabled>Hide assignment</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setdeletingassignmentid(data.id);
+                  setOpen(true);
+                }}
+              >
+                Delete Assignment
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -218,6 +263,30 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <DataTablePagination table={table} />
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        {/* <AlertDialogTrigger asChild>
+          <Button variant="outline">Show Dialog</Button>
+        </AlertDialogTrigger> */}
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                deleteAssignmentData();
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

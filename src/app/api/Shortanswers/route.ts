@@ -37,7 +37,7 @@ const functions = [
 ];
 
 
-export async function POST(req: Request):Promise<void | Response>{
+export async function POST(req: Request): Promise<void | Response> {
     const { messages } = await req.json();
     try {
         const response = await openai.chat.completions.create({

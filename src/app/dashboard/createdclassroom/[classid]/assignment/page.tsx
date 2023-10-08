@@ -7,6 +7,7 @@ import {
 import { db } from "@/lib/firebase";
 import { DataTable } from "./data-table";
 import styles from "./styles.module.css";
+import { toast } from "@/components/ui/use-toast";
 
 type Question = {
   question: string;
@@ -16,6 +17,7 @@ type Question = {
 
 type Assignment = {
   id: string;
+  assignmentname: string;
   topic: string;
   noquestions: number;
   difficulty: string;
@@ -25,7 +27,6 @@ type Assignment = {
 };
 
 async function getAssignmentsData(classid: string): Promise<Assignment[]> {
-  //not checking type any add errors and stuff
   const assignmentData: Assignment[] = [];
   try {
     const querySnapshot = await getDocs(
@@ -35,6 +36,7 @@ async function getAssignmentsData(classid: string): Promise<Assignment[]> {
     querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const assignmentDataItem: Assignment = {
         id: doc.id,
+        assignmentname: doc.data().assignmentname,
         topic: doc.data().topic,
         noquestions: doc.data().noquestions,
         difficulty: doc.data().difficulty,
@@ -46,7 +48,11 @@ async function getAssignmentsData(classid: string): Promise<Assignment[]> {
       assignmentData.push(assignmentDataItem);
     });
   } catch (error) {
-    console.error("Error fetching assignments:", error);
+    toast({
+      variant: "destructive",
+      title: "Uh oh! Something went wrong.",
+      description: "There was a error fetching your assignmnets currently",
+    });
   }
   return assignmentData;
 }

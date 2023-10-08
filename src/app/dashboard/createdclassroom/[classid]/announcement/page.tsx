@@ -28,7 +28,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -45,11 +45,11 @@ type Announcement = {
 const formSchema = z.object({
   message: z
     .string()
-    .min(10, {
+    .min(5, {
       message: "Minimun 10 letters should be there",
     })
-    .max(1000, {
-      message: "Max 50 letters should be there",
+    .max(10000, {
+      message: "Max 10000 letters should be there",
     }),
 });
 
@@ -61,10 +61,12 @@ const Announcement = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {},
+    defaultValues: {
+      message: "",
+    },
   });
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     const CACHE_EXPIRATION = 10 * 60 * 1000;
     const currentTime = new Date().getTime();
 
@@ -138,14 +140,13 @@ const Announcement = () => {
     return () => {
       unsubscribe();
     };
-  };
+  }, [classid]);
 
   useEffect(() => {
     if (classid) {
       fetchAnnouncements();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classid]);
+  }, [classid, fetchAnnouncements]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (user && classid) {

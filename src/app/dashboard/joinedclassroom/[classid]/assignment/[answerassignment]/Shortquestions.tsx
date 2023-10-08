@@ -85,12 +85,12 @@ const Shortquestions: React.FC<QidProps> = ({
 
     if (user && classid && assignmentid && type === "Shortquestions") {
       const datatobevalidated = questions.map((question, index) => ({
-        question: question.question,
+        // question: question.question,
         Correctanswer: question.answer,
         studentAnswer: selectedAnswers[index],
       }));
       console.log(datatobevalidated);
-      const prompt = `do strict comparing of Correctanswer with studentAnswer and assign grade between 0 and 5 for each question with 5 words of remarks ${JSON.stringify(
+      const prompt = `do strict comparing of Correctanswer with studentAnswer and assign grade for each between 0 and 5 with 5 words of remarks ${JSON.stringify(
         datatobevalidated
       )}`;
 

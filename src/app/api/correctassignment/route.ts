@@ -20,9 +20,7 @@ const functions = [
           items: {
             type: "object",
             properties: {
-              question: {
-                type: "string",
-              },
+
               marks: {
                 type: "number",
                 description: "Marks for the particular studentAnswer",
@@ -49,10 +47,10 @@ export async function POST(req: Request) {
       stream: true,
       messages,
       functions,
-      temperature:0,
-      top_p:0
+      // temperature:0,
+      // top_p:0
     });
-    console.log(messages);
+    // console.log(messages);
     const stream = OpenAIStream(response);
     return new StreamingTextResponse(stream);
   } catch (error) {

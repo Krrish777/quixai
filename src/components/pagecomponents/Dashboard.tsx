@@ -95,10 +95,10 @@ const formSchema2 = z.object({
   Classcode: z
     .string()
     .min(10, {
-      message: "Classcode must be at least 3 characters.",
+      message: "Classcode must be at least 10 characters.",
     })
     .max(40, {
-      message: "Classcode must be at most 15 characters.",
+      message: "Classcode must be at most 40 characters.",
     }),
 });
 

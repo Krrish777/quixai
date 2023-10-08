@@ -32,6 +32,7 @@ import FillinblanksEditor from "./FillinblanksEditor";
 import { FunctionCallHandler } from "ai";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import Shortanswerseditor from "./Shortanswerseditor";
 
 type Question = {
   question: string;
@@ -93,6 +94,7 @@ export default function ProfileForm() {
   const [Mcqarray, setMcqarray] = useState<Question[]>([]);
   const [TFarray, setTFarray] = useState<TF[]>([]);
   const [FIBarray, setFIBarray] = useState<TF[]>([]);
+  const [shortanswersarray, setshortanswersarray] = useState<TF[]>([]);
 
   useEffect(() => {
     setFormState("initial");
@@ -131,6 +133,16 @@ export default function ProfileForm() {
         const questionsArray = parsedFunctionCallArguments.questions;
 
         setFIBarray(questionsArray);
+
+        console.log(parsedFunctionCallArguments);
+      }
+    } else if (functionCall.name === "Create_short_question_and_answer") {
+      if (functionCall.arguments) {
+        console.log(functionCall.arguments);
+        const parsedFunctionCallArguments = JSON.parse(functionCall.arguments);
+        const questionsArray = parsedFunctionCallArguments.questions;
+
+        setshortanswersarray(questionsArray);
 
         console.log(parsedFunctionCallArguments);
       }
@@ -183,6 +195,10 @@ export default function ProfileForm() {
       await append({ content: prompt, role: "user" });
     } else if (querydata === "Fillinblanks") {
       const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} Fill in the blanks questions the text is = ${values.text}`;
+      setMessages([]);
+      await append({ content: prompt, role: "user" });
+    } else if (querydata === "Shortanswers") {
+      const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} short question and answer type question the text is = ${values.text}`;
       setMessages([]);
       await append({ content: prompt, role: "user" });
     } else {
@@ -358,6 +374,17 @@ export default function ProfileForm() {
           topic={topic}
           querydata={querydata}
           completion={FIBarray}
+          formState={formState}
+          setFormState={setFormState}
+          assignmentname={assignmentname}
+        />
+      ) : querydata === "Shortanswers" ? (
+        <Shortanswerseditor
+          difficulty={difficulty}
+          noquestions={noquestions}
+          topic={topic}
+          querydata={querydata}
+          completion={shortanswersarray}
           formState={formState}
           setFormState={setFormState}
           assignmentname={assignmentname}

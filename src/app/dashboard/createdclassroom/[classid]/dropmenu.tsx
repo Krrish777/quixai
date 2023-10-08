@@ -155,24 +155,24 @@ const Dropmenu = () => {
               <DropdownMenuSeparator />
               <Link
                 href={{
-                  pathname: `/dashboard/createdclassroom/${classid}/Shortanswers`,
-                  query: { type: "topic" },
+                  pathname: `/dashboard/createdclassroom/${classid}/topic`,
+                  query: { type: "Shortanswers" },
                 }}
               >
                 <DropdownMenuItem>Topic</DropdownMenuItem>
               </Link>
               <Link
                 href={{
-                  pathname: `/dashboard/createdclassroom/${classid}/Shortanswers`,
-                  query: { type: "text" },
+                  pathname: `/dashboard/createdclassroom/${classid}/text`,
+                  query: { type: "Shortanswers" },
                 }}
               >
                 <DropdownMenuItem>Text</DropdownMenuItem>
               </Link>
               <Link
                 href={{
-                  pathname: `/dashboard/createdclassroom/${classid}/Shortanswers`,
-                  query: { type: "pdf" },
+                  pathname: `/dashboard/createdclassroom/${classid}/pdf`,
+                  query: { type: "Shortanswers" },
                 }}
               >
                 <DropdownMenuItem>Pdf</DropdownMenuItem>
@@ -183,7 +183,6 @@ const Dropmenu = () => {
         <Link
           href={{
             pathname: `/dashboard/createdclassroom/${classid}/writtenmaterials`,
-            // query: { type: "WrittenAssignment" },
           }}
         >
           <DropdownMenuItem>Written Assignment</DropdownMenuItem>
