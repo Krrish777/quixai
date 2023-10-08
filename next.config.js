@@ -1,17 +1,27 @@
-/** @type {import('next').NextConfig} */
 const path = require("path");
+
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-    webpack: config => {
-        config.module.rules.push({
-            test: /\.node$/,
-            use: "node-loader",
-        });
+  webpack: (config, { isServer }) => {
+    // Add a condition to exclude pdf.js-extract only on the client side
+    if (!isServer) {
+      config.externals = {
+        'pdf.js-extract': 'pdf.js-extract',
+      };
+    }
 
-        return config;
-    },
-}
+    // Add your existing webpack rules if needed
+    config.module.rules.push({
+      test: /\.node$/,
+      use: "node-loader",
+    });
 
-module.exports = nextConfig
+    return config;
+  },
+};
+
+module.exports = nextConfig;
+
 
 
 // module.exports = {
