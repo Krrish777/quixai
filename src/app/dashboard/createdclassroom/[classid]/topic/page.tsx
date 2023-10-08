@@ -92,6 +92,7 @@ export default function ProfileForm() {
     setMcqarray([]);
     setTFarray([]);
     setFIBarray([]);
+    setshortanswersarray([]);
   }, [querydata]);
 
   const functionCallHandler: FunctionCallHandler = async (

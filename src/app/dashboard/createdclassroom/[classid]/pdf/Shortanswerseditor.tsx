@@ -35,6 +35,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const classid = params.classid;
 
   useEffect(() => {
+    console.log("useEffect is running");
     if (props.formState === "final" && props.completion) {
       try {
         const normalizedData = props.completion.map((q) => ({
@@ -44,6 +45,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
         }));
 
         setEditedData(normalizedData);
+        console.log(normalizedData);
       } catch (error) {
         console.log(props.completion);
         props.setFormState("Error");
@@ -238,6 +240,23 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+      {props.formState === "final" &&
+        props.completion &&
+        editedData.length === 0 && (
+          <div className=" relative text-center mt-10">
+            <div
+              className="animate-bounce absolute top-0"
+              style={{
+                animation: "bounce 2s infinite",
+              }}
+            >
+              <ExclamationTriangleIcon className="w-6 h-6 text-muted-foreground rotate-12" />
+            </div>
+            <div className="m-5 ml-6 ">
+              Re upload the pdf and make sure it has the right context
             </div>
           </div>
         )}

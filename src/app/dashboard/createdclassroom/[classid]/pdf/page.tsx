@@ -98,6 +98,7 @@ export default function ProfileForm() {
     setMcqarray([]);
     setTFarray([]);
     setFIBarray([]);
+    setshortanswersarray([]);
   }, [querydata]);
 
   const functionCallHandler: FunctionCallHandler = async (
@@ -111,7 +112,7 @@ export default function ProfileForm() {
 
         setMcqarray(questionsArray);
 
-        console.log(parsedFunctionCallArguments);
+        console.log(questionsArray);
       }
     } else if (functionCall.name === "create_true_or_false") {
       if (functionCall.arguments) {

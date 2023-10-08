@@ -50,6 +50,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+// import { revalidatePath } from "next/cache";
+import clearCachesByServerAction from "./h";
 
 type Question = {
   question: string;
@@ -280,6 +282,7 @@ export function DataTable<TData, TValue>({
             <AlertDialogAction
               onClick={() => {
                 deleteAssignmentData();
+                clearCachesByServerAction(pathname)
               }}
             >
               Continue

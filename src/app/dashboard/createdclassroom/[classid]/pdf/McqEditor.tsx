@@ -35,9 +35,11 @@ const McqEditor: React.FC<ChildProps> = (props) => {
   const classid = params.classid;
 
   useEffect(() => {
+    console.log("useEffect is running"); 
     if (props.formState === "final" && props.completion) {
       try {
         setQuestionData(props.completion);
+        console.log(props.completion)
       } catch (error) {
         console.error(error);
         props.setFormState("Error");
