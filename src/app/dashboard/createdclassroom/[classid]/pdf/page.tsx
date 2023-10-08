@@ -193,16 +193,17 @@ export default function ProfileForm() {
           .post("/api/Extracttext", { downloadURL })
           .then(async (respos) => {
             settext(respos.data);
+            console.log(respos.data)
             if (querydata === "Mcq") {
-              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} mcq questions the text is = ${respos.data}`;
+              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} mcq questions the text is = ${respos.data.extractedString}`;
               setMessages([]);
               await append({ content: prompt, role: "user" });
             } else if (querydata === "TF") {
-              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} true or false questions the text is = ${respos.data}`;
+              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} true or false questions the text is = ${respos.data.extractedString}`;
               setMessages([]);
               await append({ content: prompt, role: "user" });
             } else if (querydata === "Fillinblanks") {
-              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} Fill in the blanks questions the text is = ${respos.data}`;
+              const prompt = `extract the text related to the topic ${values.topic} and create ${values.noquestions} ${values.difficulty} Fill in the blanks questions the text is = ${respos.data.extractedString}`;
               setMessages([]);
               await append({ content: prompt, role: "user" });
             } else {
