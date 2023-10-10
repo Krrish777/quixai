@@ -130,7 +130,9 @@ export const Dashboard = ({ children }: any) => {
 
   const form2 = useForm<z.infer<typeof formSchema2>>({
     resolver: zodResolver(formSchema2),
-    defaultValues: {},
+    defaultValues: {
+      Classcode: "",
+    },
   });
 
   type classroomroom = {
@@ -208,7 +210,11 @@ export const Dashboard = ({ children }: any) => {
         try {
           const classroomRef = doc(db, "Classrooms", values.Classcode);
           await updateDoc(classroomRef, {
-            students: arrayUnion({ uid: user.uid, name: user.displayName }),
+            students: arrayUnion({
+              uid: user.uid,
+              name: user.displayName,
+              email: user.email,
+            }),
           }).then(() => {
             toast({
               title: "Class joined !",

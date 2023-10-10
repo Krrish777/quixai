@@ -23,7 +23,8 @@ import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
-
+import clearCachesByServerAction from "../assignment/revalidate";
+import { usePathname } from "next/navigation";
 const formSchema = z.object({
   name: z
     .string()
@@ -61,6 +62,7 @@ const formSchema = z.object({
 
 export default function ProfileForm() {
   const [loading, setloading] = useState(false);
+  const pathname = usePathname();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -94,8 +96,9 @@ export default function ProfileForm() {
           collection(db, `Classrooms/${classid}/Assignment`),
           Datatobeadded
         ).then(() => {
-          setloading(false);
+          clearCachesByServerAction(pathname);
           router.push(`/dashboard/createdclassroom/${classid}/assignment`);
+          setloading(false);
         });
       } catch (error) {
         setloading(false);

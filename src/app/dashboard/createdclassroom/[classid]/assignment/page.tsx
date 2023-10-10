@@ -1,14 +1,5 @@
-
-import {
-  collection,
-  getDocs,
-  DocumentData,
-  QueryDocumentSnapshot,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { DataTable } from "./data-table";
 import styles from "./styles.module.css";
-import { toast } from "@/components/ui/use-toast";
 import { getAssignmentsData } from '@/lib/utils/firebase';
 type Question = {
   question: string;

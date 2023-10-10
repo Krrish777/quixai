@@ -9,7 +9,8 @@ import { addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import clearCachesByServerAction from "../assignment/revalidate";
+import { usePathname } from "next/navigation";
 interface Question {
   question: string;
   answer: string;
@@ -30,7 +31,7 @@ interface ChildProps {
 
 const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const [editedData, setEditedData] = useState<Question[]>([]);
-
+  const pathname = usePathname();
   const params = useParams();
   const classid = params.classid;
 
@@ -118,6 +119,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
           Datatobeadded
         );
         props.setFormState("initial");
+        clearCachesByServerAction(pathname)
       } catch (error) {
         console.error(error);
         props.setFormState("Error");

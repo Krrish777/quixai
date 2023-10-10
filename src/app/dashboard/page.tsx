@@ -43,28 +43,26 @@ const page = () => {
             </div>
           </div>
         </Link>
-        <Link href="">
-          <div className={`${styles.box} `}>
-            <div className={styles.servicelg}>
-              <Icons.Link />
-              <div>Link</div>
-            </div>
-            <div className={styles.txt}>
-              Enter an External Link and Generate Questions (coming soon !!)
-            </div>
+
+        <div className={`${styles.box} `}>
+          <div className={styles.servicelg}>
+            <Icons.Link />
+            <div>Link</div>
           </div>
-        </Link>
-        <Link href="">
-          <div className={`${styles.box}`}>
-            <div className={styles.servicelg}>
-              <Icons.Video />
-              Video
-            </div>
-            <div className={styles.txt}>
-              Enter a valid Youtube Link and generate questions (coming soon !!)
-            </div>
+          <div className={styles.txt}>
+            Enter an External Link and Generate Questions (coming soon !!)
           </div>
-        </Link>
+        </div>
+
+        <div className={`${styles.box}`}>
+          <div className={styles.servicelg}>
+            <Icons.Video />
+            Video
+          </div>
+          <div className={styles.txt}>
+            Enter a valid Youtube Link and generate questions (coming soon !!)
+          </div>
+        </div>
       </div>
       <Listofassignments />
     </div>

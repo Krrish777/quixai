@@ -9,7 +9,8 @@ import { toast } from "@/components/ui/use-toast";
 import { db } from "@/lib/firebase";
 import { addDoc, collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { usePathname } from "next/navigation";
+import clearCachesByServerAction from "../assignment/revalidate";
 const predefinedAnswers: string[] = ["TRUE", "FALSE"];
 
 interface Question {
@@ -31,7 +32,7 @@ interface ChildProps {
 
 const QuestionEditor: React.FC<ChildProps> = (props) => {
   const [questions, setQuestions] = useState<Question[]>([]);
-
+  const pathname = usePathname();
   const params = useParams();
   const classid = params.classid;
   useEffect(() => {
@@ -111,6 +112,7 @@ const QuestionEditor: React.FC<ChildProps> = (props) => {
           Datatobeadded
         );
         props.setFormState("initial");
+        clearCachesByServerAction(pathname);
       } catch (error) {
         console.error(error);
         props.setFormState("Error");

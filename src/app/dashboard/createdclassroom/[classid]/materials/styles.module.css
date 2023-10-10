@@ -1,0 +1,11 @@
+@media screen and (max-width: 450px) {
+  .tbc {
+    max-width: 90vw;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .inps {
+    flex-direction: column;
+  }
+}

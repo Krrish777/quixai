@@ -9,6 +9,8 @@ import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { RocketIcon, Sparkles } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import clearCachesByServerAction from "../assignment/revalidate";
+import { usePathname } from "next/navigation";
 
 type Question = {
   question: string;
@@ -32,6 +34,7 @@ interface ChildProps {
 const McqEditor: React.FC<ChildProps> = (props) => {
   const [questionData, setQuestionData] = useState<Question[]>([]);
   const params = useParams();
+  const pathname = usePathname();
   const classid = params.classid;
 
   useEffect(() => {
@@ -126,6 +129,7 @@ const McqEditor: React.FC<ChildProps> = (props) => {
           Datatobeadded
         );
         props.setFormState("initial");
+        clearCachesByServerAction(pathname);
       } catch (error) {
         console.error(error);
         props.setFormState("Error");

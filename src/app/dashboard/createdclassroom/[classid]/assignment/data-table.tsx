@@ -51,7 +51,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 // import { revalidatePath } from "next/cache";
-import clearCachesByServerAction from "./h";
+import clearCachesByServerAction from "./revalidate";
 
 type Question = {
   question: string;
@@ -181,7 +181,9 @@ export function DataTable<TData, TValue>({
                 <DropdownMenuItem>View detailed assignment</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>Hide assignment</DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                Hide assignment(soon)
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   setdeletingassignmentid(data.id);
@@ -282,7 +284,7 @@ export function DataTable<TData, TValue>({
             <AlertDialogAction
               onClick={() => {
                 deleteAssignmentData();
-                clearCachesByServerAction(pathname)
+                clearCachesByServerAction(pathname);
               }}
             >
               Continue

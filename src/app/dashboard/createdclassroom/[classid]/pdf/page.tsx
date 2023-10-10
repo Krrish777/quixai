@@ -92,6 +92,7 @@ export default function ProfileForm() {
   const [FIBarray, setFIBarray] = useState<TF[]>([]);
   const [text, settext] = useState<string>("");
   const [shortanswersarray, setshortanswersarray] = useState<TF[]>([]);
+  const [dataLoading, setDataLoading] = useState<boolean>(false);
 
   useEffect(() => {
     setFormState("initial");
@@ -176,6 +177,7 @@ export default function ProfileForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setDataLoading(true);
     setFormState("loading");
     settopic(values.topic);
     setnoquestions(values.noquestions);
@@ -230,6 +232,7 @@ export default function ProfileForm() {
                 description: "There was a problem with your request.",
               });
             }
+            setDataLoading(false);
           });
       });
     } catch (error) {
@@ -262,7 +265,7 @@ export default function ProfileForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Number of Questions</FormLabel>
+                    <FormLabel>Enter the name of the assignment</FormLabel>
                     <FormControl>
                       <Input
                         type="text"
@@ -369,7 +372,7 @@ export default function ProfileForm() {
               />
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || dataLoading}
                 className={`${styles.btsub}`}
               >
                 Submit
