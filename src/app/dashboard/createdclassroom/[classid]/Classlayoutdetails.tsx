@@ -5,9 +5,10 @@ import { CopyIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { toast } from "@/components/ui/use-toast";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 
 type Classroom = {
   id: string;
@@ -24,30 +25,75 @@ type Classroom = {
 const Classlayoutdetails = () => {
   const params = useParams();
   const [Classname, setClasssname] = useState<string>();
+  const [user, setuser] = useState<User | null>(null);
   const classid = Array.isArray(params.classid)
     ? params.classid.join("")
     : params.classid;
 
   useEffect(() => {
+    const CACHE_EXPIRATION = 10 * 60 * 1000;
+    const currentTime = new Date().getTime();
+
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (authUser && classid) {
+      if (authUser) {
+        setuser(authUser);
         const CACHE_KEY = `${authUser.uid.slice(0, 5)}CreatedclassroomsData`;
         const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
 
-        if (cachedData) {
+        if (
+          cachedData &&
+          cachedTimestamp &&
+          currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION
+        ) {
+          const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
+          const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+          const parsedData = JSON.parse(decryptedData) as Classroom[];
+          const foundObject = parsedData.find((item) => item.id === classid);
+          if (foundObject) {
+            setClasssname(foundObject?.Classname);
+          }
+        } else {
           try {
-            const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
-            const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+            const q = query(
+              collection(db, "Classrooms"),
+              where("Createdby", "==", authUser.uid),
+              orderBy("Createddata")
+            );
 
-            const parsedData = JSON.parse(decryptedData) as Classroom[];
-            const foundObject = parsedData.find((item) => item.id === classid);
+            const querySnapshot = await getDocs(q);
+
+            const classroomsData: Classroom[] = [];
+            querySnapshot.forEach((doc) => {
+              classroomsData.push({
+                id: doc.id,
+                ...doc.data(),
+              } as Classroom);
+            });
+
+            const dataToEncrypt = JSON.stringify(classroomsData);
+            const encryptedData = CryptoJS.AES.encrypt(
+              dataToEncrypt,
+              CACHE_KEY
+            ).toString();
+
+            localStorage.setItem(CACHE_KEY, encryptedData);
+            localStorage.setItem(
+              `${CACHE_KEY}_timestamp`,
+              currentTime.toString()
+            );
+
+            const foundObject = classroomsData.find(
+              (item) => item.id === classid
+            );
             if (foundObject) {
               setClasssname(foundObject?.Classname);
             }
-          } catch (error) {
-            console.error("Error decrypting data:", error);
-          }
+          } catch (error) {}
         }
+      } else {
+        console.log("No user is currently authenticated");
       }
     });
 
@@ -61,7 +107,6 @@ const Classlayoutdetails = () => {
       <h2 className={`text-2xl font-semibold tracking-tight ${styles.clsname}`}>
         {Classname ? Classname : ""}
       </h2>
-
       <div
         className={`${styles.cpnam} text-sm text-muted-foreground  flex leading-1 items-center`}
       >

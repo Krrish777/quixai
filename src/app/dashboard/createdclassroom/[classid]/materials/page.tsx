@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -152,6 +152,7 @@ export default function InpuMaterialtFile() {
       context: "",
     },
   });
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!values.file) {
       alert("no file selected");
@@ -162,9 +163,20 @@ export default function InpuMaterialtFile() {
       alert("No class name");
       return null;
     }
-    const id = uuidv4();
+
+    const allowedTypes = ["application/pdf"];
+
+    if (values.file && !allowedTypes.includes(values.file.type)) {
+      toast({
+        variant: "destructive",
+        title: "Unsuported file",
+        description: "Temporirarly we support only pdf files",
+      });
+      return;
+    }
 
     try {
+      const id = uuidv4();
       const storageRef = ref(storage, `${classid}/materials/${id}`);
       const snapshot = await uploadBytes(storageRef, values.file);
 
@@ -239,13 +251,13 @@ export default function InpuMaterialtFile() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className=" flex-row flex items-center gap-2"
+              className={`flex-row flex items-center gap-2 ${styles.inps}`}
             >
               <FormField
                 control={form.control}
                 name="file"
                 render={({ field: { value, onChange, ...fieldProps } }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormControl>
                       <Input
                         type="file"
@@ -286,24 +298,22 @@ export default function InpuMaterialtFile() {
         <Separator />
       </div>
       <Table>
-        <TableCaption>A list of your recent invoices.</TableCaption>
+        {/* <TableCaption>Materials for refrences</TableCaption> */}
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Invoice</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>Context</TableHead>
+            <TableHead>View Material</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {materials.map((material) => (
             <TableRow key={material.id}>
-              <TableCell className="font-medium">
-              <a href={`${material.file}?alt=media`} download={material.file}>
-    {material.file}
-  </a>
-              </TableCell>
               <TableCell>{material.context}</TableCell>
+              <TableCell className="font-medium">
+                <a href={material.file} download>
+                  &nbsp; View Material
+                </a>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

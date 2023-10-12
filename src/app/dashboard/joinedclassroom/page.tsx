@@ -47,6 +47,7 @@ export default function Createddclassroom() {
               where("students", "array-contains", {
                 uid: authUser.uid,
                 name: authUser.displayName,
+                email:authUser.email,
               })
             );
 

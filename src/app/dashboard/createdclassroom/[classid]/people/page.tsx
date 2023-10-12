@@ -5,8 +5,8 @@ import { CopyIcon, Link, MoreHorizontal } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -24,6 +24,16 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 
 type Classroom = {
   id: string;
@@ -45,40 +55,142 @@ type Student = {
 const Page = () => {
   const params = useParams();
   const [Classname, setClasssname] = useState<Student[]>([]);
+  const [user, setuser] = useState<User | null>(null);
   const classid = Array.isArray(params.classid)
     ? params.classid.join("")
     : params.classid;
 
-  useEffect(() => {
+  function renderstudents() {
+    const CACHE_EXPIRATION = 10 * 60 * 1000;
+    const currentTime = new Date().getTime();
+
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (authUser && classid) {
+      if (authUser) {
+        setuser(authUser);
         const CACHE_KEY = `${authUser.uid.slice(0, 5)}CreatedclassroomsData`;
         const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
 
-        if (cachedData) {
+        if (
+          cachedData &&
+          cachedTimestamp &&
+          currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION
+        ) {
+          const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
+          const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+          const parsedData = JSON.parse(decryptedData) as Classroom[];
+          const foundObject = parsedData.find((item) => item.id === classid);
+          if (foundObject) {
+            setClasssname(foundObject?.students || []);
+          }
+        } else {
           try {
-            const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
-            const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+            const q = query(
+              collection(db, "Classrooms"),
+              where("Createdby", "==", authUser.uid),
+              orderBy("Createddata")
+            );
 
-            const parsedData = JSON.parse(decryptedData) as Classroom[];
-            const foundObject = parsedData.find((item) => item.id === classid);
+            const querySnapshot = await getDocs(q);
+
+            const classroomsData: Classroom[] = [];
+            querySnapshot.forEach((doc) => {
+              classroomsData.push({
+                id: doc.id,
+                ...doc.data(),
+              } as Classroom);
+            });
+
+            const dataToEncrypt = JSON.stringify(classroomsData);
+            const encryptedData = CryptoJS.AES.encrypt(
+              dataToEncrypt,
+              CACHE_KEY
+            ).toString();
+
+            localStorage.setItem(CACHE_KEY, encryptedData);
+            localStorage.setItem(
+              `${CACHE_KEY}_timestamp`,
+              currentTime.toString()
+            );
+
+            const foundObject = classroomsData.find(
+              (item) => item.id === classid
+            );
             if (foundObject) {
               setClasssname(foundObject?.students || []);
             }
-          } catch (error) {
-            console.error("Error decrypting data:", error);
-          }
+          } catch (error) {}
         }
+      } else {
+        console.log("No user is currently authenticated");
       }
     });
 
     return () => {
       unsubscribe();
     };
+  }
+
+  useEffect(() => {
+    if (classid) {
+      renderstudents();
+    }
   }, [classid]);
 
+  async function deleteStudent(
+    uid: string,
+    name: string,
+    email: string
+  ): Promise<void> {
+    try {
+      if (classid && uid && user) {
+        const CACHE_KEY = `${user.uid.slice(0, 5)}CreatedclassroomsData`;
+        const classroomDocRef = doc(db, "Classrooms", classid);
+        const classroomDoc = await getDoc(classroomDocRef);
+
+        if (classroomDoc.exists()) {
+          const classroomData = classroomDoc.data();
+
+          // Extract the students array from the classroom data
+          const students = classroomData.students || [];
+
+          // Find the index of the student with the specified UID
+          const studentIndex = students.findIndex(
+            (student: { uid: string }) => student.uid === uid
+          );
+
+          console.log(studentIndex);
+          if (studentIndex !== -1) {
+            // Remove the student from the students array
+            students.splice(studentIndex, 1);
+
+            // Update the classroom document with the modified students array
+            await updateDoc(classroomDocRef, { students });
+
+            console.log(`Student with UID ${uid} removed successfully.`);
+          } else {
+            console.error(
+              `Student with UID ${uid} not found in the classroom.`
+            );
+          }
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(`${CACHE_KEY}_timestamp`);
+          renderstudents();
+        } else {
+          console.error(`Classroom document with ID ${classid} not found.`);
+        }
+      } else {
+        console.error("Missing classid or uid");
+      }
+    } catch (error) {
+      console.error("Error removing student:", error);
+      throw new Error("Failed to remove student");
+    }
+  }
+
   return (
-    <Card className="col-span-3">
+    <Card className={`col-span-3 ${styles.paddcard}`}>
       <CardHeader>
         <CardTitle>Students Details </CardTitle>
         <CardDescription>Manage class students </CardDescription>
@@ -93,7 +205,9 @@ const Page = () => {
               </Avatar>
               <div className="ml-4 space-y-1">
                 <p className="text-sm font-medium leading-none">{item.name}</p>
-                <p className="text-sm text-muted-foreground">{item.email}</p>
+                <p className={`text-sm text-muted-foreground ${styles.email}`}>
+                  {item.email}
+                </p>
               </div>
               <div className="ml-auto font-medium">
                 <DropdownMenu>
@@ -106,7 +220,13 @@ const Page = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>Email Student</DropdownMenuItem>
-                    <DropdownMenuItem>Remove Student</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        deleteStudent(item.uid, item.name, item.email);
+                      }}
+                    >
+                      Remove Student
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
