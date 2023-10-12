@@ -59,6 +59,9 @@ const Page = () => {
   const classid = Array.isArray(params.classid)
     ? params.classid.join("")
     : params.classid;
+  const randomImage = ["02.png", "01.png", "03.png", "04.png", "05.png"][
+    Math.floor(Math.random() * 5)
+  ];
 
   function renderstudents() {
     const CACHE_EXPIRATION = 10 * 60 * 1000;
@@ -200,7 +203,7 @@ const Page = () => {
           {Classname.map((item) => (
             <div className="flex items-center" key={item.uid}>
               <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
-                <AvatarImage src="/02.png" alt="Avatar" />
+                <AvatarImage src={`/${randomImage}`} alt="Avatar" />
                 <AvatarFallback>JL</AvatarFallback>
               </Avatar>
               <div className="ml-4 space-y-1">
