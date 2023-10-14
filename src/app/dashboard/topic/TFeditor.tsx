@@ -6,9 +6,10 @@ import TextareaAutosize from "react-textarea-autosize";
 import { Button } from "@/components/ui/button";
 import { RocketIcon, Sparkles } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { addDoc, collection } from "firebase/firestore";
-
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePathname } from "next/navigation";
 const predefinedAnswers: string[] = ["TRUE", "FALSE"];
 
 interface Question {
@@ -25,13 +26,15 @@ interface ChildProps {
   setFormState: (
     newFormState: "initial" | "loading" | "final" | "Error"
   ) => void;
+  assignmentname: string;
 }
 
 const QuestionEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
-
+  const pathname = usePathname();
   const params = useParams();
-  const classid = params.classid;
+  
+  const user = auth.currentUser;
   useEffect(() => {
     if (props.formState === "final" && props.completion) {
       try {
@@ -86,6 +89,8 @@ const QuestionEditor: React.FC<ChildProps> = (props: ChildProps) => {
 
   async function SendAssignment(questionData: Question[]) {
     const Datatobeadded = {
+      createduser: user?.uid,
+      assignmentname: props.assignmentname,
       topic: props.topic,
       noquestions: props.noquestions,
       difficulty: props.difficulty,
@@ -94,31 +99,36 @@ const QuestionEditor: React.FC<ChildProps> = (props: ChildProps) => {
       totalmarks: props.noquestions,
     };
     if (
+      user &&
+      user.uid &&
+      props.assignmentname &&
       props.formState === "final" &&
       props.completion &&
-      props.noquestions != null &&
-      props.topic !== "" &&
+      props.noquestions &&
+      props.topic &&
       props.difficulty !== null &&
       props.querydata === "TF"
     ) {
       try {
-        await addDoc(
-          collection(db, `Classrooms/${classid}/Assignment`),
-          Datatobeadded
-        );
+        await addDoc(collection(db, `Userassignments`), Datatobeadded);
         props.setFormState("initial");
       } catch (error) {
         console.error(error);
         props.setFormState("Error");
       }
     } else {
-      console.log("There was an error with saving the details");
+      console.log(Datatobeadded);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem with your request.",
+      });
       props.setFormState("Error");
     }
   }
 
   return (
-    <div className="place-items-center grid">
+    <div className={`place-items-center grid ${style.grd2}`}>
       {props.formState === "initial" && (
         <div className=" relative text-center mt-10">
           <div
@@ -134,32 +144,34 @@ const QuestionEditor: React.FC<ChildProps> = (props: ChildProps) => {
           </div>
         </div>
       )}
-      {props.formState === "Error" && (
-        <div className=" relative text-center mt-10">
-          <div
-            className="animate-bounce absolute top-0"
-            style={{
-              animation: "bounce 2s infinite",
-            }}
-          >
-            <ExclamationTriangleIcon className="w-6 h-6 text-muted-foreground rotate-12" />
-          </div>
-          <div className="m-5 ml-6 ">
-            There was a error with your Request !!!
-          </div>
-        </div>
-      )}
-      {props.formState === "loading" && (
-        <div className=" relative text-center mt-10">
-          <div
-            className="animate-bounce absolute top-0"
-            style={{
-              animation: "bounce 2s infinite",
-            }}
-          >
-            <Sparkles className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <div className="m-5 ml-6 ">Preapring Your Request !!!</div>
+      {props.formState === "loading" && props.noquestions && (
+        <div className="flex flex-col  gap-5 w-full">
+          {Array.from({ length: props.noquestions }).map((_, index) => (
+            <div
+              className="flex flex-col  gap-5 space-x-4  border p-3 rounded-lg w-full"
+              key={index}
+            >
+              <div className="flex items-center space-x-4 ml-3">
+                <Skeleton className="h-12 w-12 rounded-full " />
+                <div className="space-y-2 w-full">
+                  <Skeleton className="h-5 w-[90%] " />
+                  <Skeleton className="h-5 w-[80%] " />
+                </div>
+              </div>
+              <div className="flex items-center gap-4 ml-0">
+                <Skeleton className="h-8 w-8 rounded-lg  ml-0" />
+                <Skeleton className="h-6 w-[50%] " />
+              </div>
+              <div className="flex items-center gap-4 ml-0">
+                <Skeleton className="h-8 w-8 rounded-lg  " />
+                <Skeleton className="h-6 w-[50%] " />
+              </div>
+              <div className="flex items-center gap-4 ml-0">
+                <Skeleton className="h-8 w-8 rounded-lg  " />
+                <Skeleton className="h-6 w-[50%] " />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {props.formState === "final" &&
@@ -225,6 +237,21 @@ const QuestionEditor: React.FC<ChildProps> = (props: ChildProps) => {
             </div>
           </div>
         )}
+      {props.formState === "Error" && (
+        <div className=" relative text-center mt-10">
+          <div
+            className="animate-bounce absolute top-0"
+            style={{
+              animation: "bounce 2s infinite",
+            }}
+          >
+            <ExclamationTriangleIcon className="w-6 h-6 text-muted-foreground rotate-12" />
+          </div>
+          <div className="m-5 ml-6 ">
+            There was a error with your Request !!!
+          </div>
+        </div>
+      )}
     </div>
   );
 };

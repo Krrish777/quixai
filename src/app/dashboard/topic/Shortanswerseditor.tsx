@@ -30,9 +30,9 @@ interface ChildProps {
 
 const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const [editedData, setEditedData] = useState<Question[]>([]);
-  const user = auth.currentUser;
+  const pathname = usePathname();
   const params = useParams();
-  const classid = params.classid;
+  const user = auth.currentUser;
 
   useEffect(() => {
     if (props.formState === "final" && props.completion) {
@@ -113,7 +113,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       props.noquestions &&
       props.topic &&
       props.difficulty !== null &&
-      props.querydata === "Fillinblanks"
+      props.querydata === "Shortanswers"
     ) {
       try {
         await addDoc(collection(db, `Userassignments`), Datatobeadded);

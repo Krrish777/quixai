@@ -1,19 +1,20 @@
-import { useParams } from "next/navigation";
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import TextareaAutosize from "react-textarea-autosize";
 import style from "./styles.module.css";
 import { Button } from "@/components/ui/button";
-import { ExclamationTriangleIcon, MagicWandIcon } from "@radix-ui/react-icons";
-import { RocketIcon, Sparkles } from "lucide-react";
-import TextareaAutosize from "react-textarea-autosize";
 import { addDoc, collection } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { useParams } from "next/navigation";
+import { ExclamationTriangleIcon, MagicWandIcon } from "@radix-ui/react-icons";
+import { RocketIcon, Sparkles, Wand } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname } from "next/navigation";
-interface Question {
+type Question = {
   question: string;
+  options: string[];
   answer: string;
-}
+};
 
 interface ChildProps {
   formState: "initial" | "loading" | "final" | "Error";
@@ -22,74 +23,83 @@ interface ChildProps {
   topic: string;
   noquestions: number | null;
   difficulty: string;
+  assignmentname: string;
   setFormState: (
     newFormState: "initial" | "loading" | "final" | "Error"
   ) => void;
-  assignmentname: string;
 }
 
-const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
-  const [editedData, setEditedData] = useState<Question[]>([]);
-  const user = auth.currentUser;
+const McqEditor: React.FC<ChildProps> = (props) => {
+  const [questionData, setQuestionData] = useState<Question[]>([]);
   const params = useParams();
-  const classid = params.classid;
-
+  const user = auth.currentUser;
   useEffect(() => {
+    console.log("useEffect is running");
     if (props.formState === "final" && props.completion) {
       try {
-        const normalizedData = props.completion.map((q) => ({
-          ...q,
-          answer:
-            q.answer.charAt(0).toUpperCase() + q.answer.slice(1).toLowerCase(),
-        }));
-
-        setEditedData(normalizedData);
-      } catch (error) {
+        setQuestionData(props.completion);
         console.log(props.completion);
+      } catch (error) {
+        console.error(error);
         props.setFormState("Error");
       }
     }
   }, [props]);
 
-  const handleQuestionChange = (
-    index: number,
-    event: ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const updatedData = [...editedData];
-    updatedData[index].question = event.target.value;
-    setEditedData(updatedData);
+  const handleQuestionChange = (index: number, newValue: string) => {
+    const updatedQuestions = questionData.map((question, i) =>
+      i === index ? { ...question, question: newValue } : question
+    );
+    setQuestionData(updatedQuestions);
   };
 
-  const handleAnswerChange = (
-    index: number,
-    event: ChangeEvent<HTMLTextAreaElement>
+  const handleOptionChange = (
+    questionIndex: number,
+    optionIndex: number,
+    newValue: string
   ) => {
-    const updatedData = [...editedData];
-    updatedData[index].answer = event.target.value;
-    setEditedData(updatedData);
+    const updatedQuestions = questionData.map((question, i) =>
+      i === questionIndex
+        ? {
+            ...question,
+            options: question.options.map((option, j) =>
+              j === optionIndex ? newValue : option
+            ),
+            answer:
+              question.answer === question.options[optionIndex]
+                ? newValue
+                : question.answer,
+          }
+        : question
+    );
+    setQuestionData(updatedQuestions);
+  };
+
+  const handleAnswerChange = (index: number, newValue: string) => {
+    const updatedQuestions = questionData.map((question, i) =>
+      i === index && question.options.includes(newValue)
+        ? { ...question, answer: newValue }
+        : question
+    );
+    setQuestionData(updatedQuestions);
   };
 
   const handleLogEditedJson = () => {
-    try {
-      const isValid = editedData.every(
-        (item) =>
-          item.hasOwnProperty("question") && item.hasOwnProperty("answer")
-      );
+    const isAllAnswersValid = questionData.every((question) =>
+      question.options.includes(question.answer)
+    );
 
-      if (isValid) {
-        SendAssignment(editedData);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong.",
-          description: "Pls Check the question and answers once again",
-        });
-        console.error(
-          "Invalid JSON: Each object should have 'question' and 'answer' properties."
-        );
-      }
-    } catch (error) {
-      console.error("Invalid JSON:", error);
+    if (isAllAnswersValid) {
+      SendAssignment(questionData);
+      console.log(JSON.stringify(questionData, null, 2));
+      console.log(questionData);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Pls Check the question and answers once again",
+      });
+      console.log("Please make sure all answers are valid.");
     }
   };
 
@@ -107,13 +117,13 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
     if (
       user &&
       user.uid &&
-      props.assignmentname &&
+      props.assignmentname !== "" &&
       props.formState === "final" &&
       props.completion &&
       props.noquestions &&
       props.topic &&
       props.difficulty !== null &&
-      props.querydata === "Fillinblanks"
+      props.querydata === "Mcq"
     ) {
       try {
         await addDoc(collection(db, `Userassignments`), Datatobeadded);
@@ -150,6 +160,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
           </div>
         </div>
       )}
+
       {props.formState === "loading" && props.noquestions && (
         <div className="flex flex-col  gap-5 w-full">
           {Array.from({ length: props.noquestions }).map((_, index) => (
@@ -182,7 +193,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       )}
       {props.formState === "final" &&
         props.completion &&
-        editedData.length > 0 && (
+        questionData.length > 0 && (
           <div>
             <div className="flex flex-col p-2 justify-center mb-5 items-center ">
               <div className={`flex gap-5 ${style.names}`}>
@@ -196,32 +207,48 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
             <div
               className={`flex items-center justify-center flex-col ${style.cont}`}
             >
-              <div className="container mx-auto p-4">
-                {editedData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-4 border mb-4 w-full rounded-sm flex flex-col"
-                  >
-                    <TextareaAutosize
-                      className="w-full px-2 py-1 mb-2 rounded text-left bg-transparent border-b"
-                      value={item.question}
-                      onChange={(e) => handleQuestionChange(index, e)}
-                    />
-                    <div className="flex flex-row gap-2">
-                      {" "}
-                      <div className="text-gray-600 mt-2 leading-1">
-                        Answer:
-                      </div>
-                      <TextareaAutosize
-                        className="w-full px-2 py-1 mb-2 rounded text-left bg-transparent"
-                        value={item.answer}
-                        onChange={(e) => handleAnswerChange(index, e)}
+              {questionData.map((question, questionIndex) => (
+                <div
+                  key={questionIndex}
+                  className="p-4 border mb-4 w-full rounded-sm"
+                >
+                  <TextareaAutosize
+                    className="w-full px-2 py-1 mb-2 rounded text-left bg-transparent border-b"
+                    value={question.question}
+                    onChange={(e) =>
+                      handleQuestionChange(questionIndex, e.target.value)
+                    }
+                  />
+                  {question.options.map((option, optionIndex) => (
+                    <div key={optionIndex} className="flex items-center">
+                      <input
+                        type="radio"
+                        name={`answer-${questionIndex}`}
+                        value={option}
+                        checked={question.answer === option}
+                        onChange={() =>
+                          handleAnswerChange(questionIndex, option)
+                        }
+                      />
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 mr-2 rounded bg-transparent"
+                        value={option}
+                        onChange={(e) =>
+                          handleOptionChange(
+                            questionIndex,
+                            optionIndex,
+                            e.target.value
+                          )
+                        }
                       />
                     </div>
+                  ))}
+                  <div className="text-gray-600 mt-2">
+                    Selected Answer: {question.answer}
                   </div>
-                ))}
-              </div>
-
+                </div>
+              ))}
               <div
                 className={`flex flex-row items-center gap-5 justify-around mb-10 ${style.btn}`}
               >
@@ -260,4 +287,4 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   );
 };
 
-export default FillinblanksEditor;
+export default McqEditor;

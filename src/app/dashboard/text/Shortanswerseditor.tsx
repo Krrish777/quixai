@@ -9,7 +9,7 @@ import { addDoc, collection } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePathname } from "next/navigation";
+
 interface Question {
   question: string;
   answer: string;
@@ -113,7 +113,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       props.noquestions &&
       props.topic &&
       props.difficulty !== null &&
-      props.querydata === "Fillinblanks"
+      props.querydata === "Shortanswers"
     ) {
       try {
         await addDoc(collection(db, `Userassignments`), Datatobeadded);

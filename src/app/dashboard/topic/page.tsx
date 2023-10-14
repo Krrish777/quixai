@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Separator } from "@/components/ui/separator";
 import * as z from "zod";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button, buttonVariants } from "@/components/ui/button";
 import styles from "./styles.module.css";
 import {
@@ -24,11 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useSearchParams } from "next/navigation";
 import McqEditor from "./McqEditor";
 import { useEffect, useState } from "react";
 import TFEditor from "./TFeditor";
 import FillinblanksEditor from "./FillinblanksEditor";
 import { FunctionCallHandler } from "ai";
+import { toast } from "@/components/ui/use-toast";
+import Shortanswerseditor from "./Shortanswerseditor";
 import { cn } from "@/lib/utils";
 
 type Question = {
@@ -43,18 +46,26 @@ interface TF {
 }
 
 const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, {
+      message: "Topic must be at least 2 characters.",
+    })
+    .max(40, {
+      message: "Topic must be at most 40 characters.",
+    }),
   topic: z
     .string()
-    .min(5, {
-      message: "Topic must be at least 5 characters.",
+    .min(3, {
+      message: "Topic must be at least 3 characters.",
     })
-    .max(30, {
-      message: "Topic must be at most 15 characters.",
+    .max(40, {
+      message: "Topic must be at most 40 characters.",
     }),
   noquestions: z.coerce
     .number()
-    .gte(3, {
-      message: "Number of questions must be at least 3.",
+    .gte(1, {
+      message: "Number of questions must be at least 1.",
     })
     .lte(10, {
       message: "Max Number of questions is 10.",
@@ -66,21 +77,25 @@ export default function ProfileForm() {
   const [formState, setFormState] = useState<
     "initial" | "loading" | "final" | "Error"
   >("initial");
-
+  const searchParams = useSearchParams();
+  const querydata = searchParams.get("type");
   const [topic, settopic] = useState<string>("");
-  const [noquestions, setnoquestions] = useState<number>(3);
+  const [assignmentname, setassignmentname] = useState<string>("");
+  const [noquestions, setnoquestions] = useState<number>(1);
   const [difficulty, setdifficulty] = useState<string>("");
-  const [type, settype] = useState("Mcq");
   const [Mcqarray, setMcqarray] = useState<Question[]>([]);
   const [TFarray, setTFarray] = useState<TF[]>([]);
   const [FIBarray, setFIBarray] = useState<TF[]>([]);
+  const [shortanswersarray, setshortanswersarray] = useState<TF[]>([]);
+  const [type, settype] = useState("Mcq");
 
   useEffect(() => {
     setFormState("initial");
     setMcqarray([]);
     setTFarray([]);
     setFIBarray([]);
-  }, []);
+    setshortanswersarray([]);
+  }, [type]);
 
   const functionCallHandler: FunctionCallHandler = async (
     chatMessages,
@@ -115,6 +130,16 @@ export default function ProfileForm() {
 
         console.log(parsedFunctionCallArguments);
       }
+    } else if (functionCall.name === "Create_short_question_and_answer") {
+      if (functionCall.arguments) {
+        console.log(functionCall.arguments);
+        const parsedFunctionCallArguments = JSON.parse(functionCall.arguments);
+        const questionsArray = parsedFunctionCallArguments.questions;
+
+        setshortanswersarray(questionsArray);
+
+        console.log(parsedFunctionCallArguments);
+      }
     }
   };
 
@@ -140,17 +165,18 @@ export default function ProfileForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // topic: "",
-      // noquestions: 3,
+      name: "",
+      topic: "",
+      noquestions: 1,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    setFormState("initial");
+    setFormState("loading");
     settopic(values.topic);
     setnoquestions(values.noquestions);
     setdifficulty(values.difficulty);
+    setassignmentname(values.name);
 
     if (type === "Mcq") {
       const prompt = `create ${values.noquestions} ${values.difficulty} mcq about topic ${values.topic}`;
@@ -164,14 +190,24 @@ export default function ProfileForm() {
       const prompt = `create ${values.noquestions} ${values.difficulty} Fill in the blanks question about topic ${values.topic}`;
       setMessages([]);
       await append({ content: prompt, role: "user" });
+    } else if (type === "Shortanswers") {
+      const prompt = `create ${values.noquestions} ${values.difficulty} short question and answer type question about topic ${values.topic}`;
+      setMessages([]);
+      await append({ content: prompt, role: "user" });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "Reload the page and try again later",
+      });
+      return;
     }
   }
 
   return (
-    /////add stop
-    <div className={`${styles.grd} mt-3`}>
+    <div className={`${styles.grd}`}>
       <div className={`p-1 ${styles.grd1}`}>
-        <div className="space-y-6">
+        <div className="space-y-3">
           <div>
             <h3 className="text-lg font-medium">Topic</h3>
             <p className="text-sm text-muted-foreground">
@@ -246,7 +282,23 @@ export default function ProfileForm() {
         </div>
         <div className={styles.maxcont}>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assignment name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex:Assignment 6" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Enter ther Assignment name
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="topic"
@@ -257,7 +309,7 @@ export default function ProfileForm() {
                       <Input placeholder="Enter topic" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Explain in 3 or 5 words for better results
+                      Explain your topic in 3 or 5 words for better results
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -277,13 +329,12 @@ export default function ProfileForm() {
                       />
                     </FormControl>
                     <FormDescription>
-                      This is the number of questions you want.
+                      Enter the number of questions you want to generate
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="difficulty"
@@ -333,6 +384,7 @@ export default function ProfileForm() {
           noquestions={noquestions}
           difficulty={difficulty}
           setFormState={setFormState}
+          assignmentname={assignmentname}
         />
       ) : type === "TF" ? (
         <TFEditor
@@ -343,6 +395,7 @@ export default function ProfileForm() {
           completion={TFarray}
           formState={formState}
           setFormState={setFormState}
+          assignmentname={assignmentname}
         />
       ) : type === "Fillinblanks" ? (
         <FillinblanksEditor
@@ -353,6 +406,18 @@ export default function ProfileForm() {
           completion={FIBarray}
           formState={formState}
           setFormState={setFormState}
+          assignmentname={assignmentname}
+        />
+      ) : type === "Shortanswers" ? (
+        <Shortanswerseditor
+          difficulty={difficulty}
+          noquestions={noquestions}
+          topic={topic}
+          querydata={type}
+          completion={shortanswersarray}
+          formState={formState}
+          setFormState={setFormState}
+          assignmentname={assignmentname}
         />
       ) : null}
     </div>

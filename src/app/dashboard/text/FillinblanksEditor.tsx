@@ -21,18 +21,18 @@ interface ChildProps {
   querydata: string | null;
   topic: string;
   noquestions: number | null;
+  assignmentname: string;
   difficulty: string;
   setFormState: (
     newFormState: "initial" | "loading" | "final" | "Error"
   ) => void;
-  assignmentname: string;
 }
 
 const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const [editedData, setEditedData] = useState<Question[]>([]);
-  const user = auth.currentUser;
+  const pathname = usePathname();
   const params = useParams();
-  const classid = params.classid;
+  const user = auth.currentUser;
 
   useEffect(() => {
     if (props.formState === "final" && props.completion) {
@@ -150,6 +150,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
           </div>
         </div>
       )}
+
       {props.formState === "loading" && props.noquestions && (
         <div className="flex flex-col  gap-5 w-full">
           {Array.from({ length: props.noquestions }).map((_, index) => (

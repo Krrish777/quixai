@@ -21,18 +21,18 @@ interface ChildProps {
   querydata: string | null;
   topic: string;
   noquestions: number | null;
+  assignmentname: string;
   difficulty: string;
   setFormState: (
     newFormState: "initial" | "loading" | "final" | "Error"
   ) => void;
-  assignmentname: string;
 }
 
 const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
   const [editedData, setEditedData] = useState<Question[]>([]);
-  const user = auth.currentUser;
+  const pathname = usePathname();
   const params = useParams();
-  const classid = params.classid;
+  const user = auth.currentUser;
 
   useEffect(() => {
     if (props.formState === "final" && props.completion) {
@@ -110,8 +110,8 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       props.assignmentname &&
       props.formState === "final" &&
       props.completion &&
-      props.noquestions &&
-      props.topic &&
+      props.noquestions != null &&
+      props.topic !== "" &&
       props.difficulty !== null &&
       props.querydata === "Fillinblanks"
     ) {
@@ -132,6 +132,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       props.setFormState("Error");
     }
   }
+  console.log(props.completion);
 
   return (
     <div className={`place-items-center grid ${style.grd2}`}>

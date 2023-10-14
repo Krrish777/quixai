@@ -7,6 +7,8 @@ import {
   getDocs,
   QuerySnapshot,
   DocumentData,
+  query,
+  where,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { toast } from "../ui/use-toast";
@@ -19,15 +21,13 @@ const Listofassignments = () => {
 
   const fetchAnnouncements = async () => {
     try {
-      // Fetch data from Firestore when the user is authenticated
       if (user) {
-        // Create a query for the Userassignments collection
-        const q = collection(db, "Userassignments");
+        const q = query(
+          collection(db, "Userassignments"),
+          where("createduser", "==", user.uid)
+        );
 
-        // Fetch data from Firestore
         const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(q);
-
-        // Process the query results and update the state
         const announcementsData: DocumentData[] = [];
         querySnapshot.forEach((doc) => {
           announcementsData.push({
@@ -35,8 +35,8 @@ const Listofassignments = () => {
             ...doc.data(),
           });
         });
-
         setAnnouncements(announcementsData);
+        console.log(announcementsData)
       }
     } catch (error) {
       console.error(error);
@@ -49,46 +49,35 @@ const Listofassignments = () => {
   };
 
   useEffect(() => {
-    // Listen for changes in the authentication state
     const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       if (authUser) {
         setUser(authUser);
+        fetchAnnouncements();
       } else {
-        // Handle the case when the user is not authenticated
         setUser(null);
       }
     });
 
     return () => {
-      // Unsubscribe from the onAuthStateChanged listener when the component unmounts
       unsubscribe();
     };
-  }, []);
-
-  useEffect(() => {
-    // Fetch announcements when the user is authenticated
-    if (user) {
-      fetchAnnouncements();
-    }
   }, [user]);
 
   return (
     <div className={styles.recent}>
       <div className={styles.recentname}>Recently Created</div>
       <div className={styles.r}>
-        {/* Map over the announcements and render them */}
         {announcements.map((announcement) => (
           <div key={announcement.id} className={styles.recentobj}>
-            <div>Class: {announcement.class}</div>
-            <div>Subject: {announcement.subject}</div>
+            <div>Class: {announcement.assignmentname}</div>
+            <div>Subject: {announcement.noquestions}</div>
             <div>Topic: {announcement.topic}</div>
             <Link
               href={`/dashboard/${announcement.id}?type=${announcement.Questiontype}`}
             >
-              {" "}
               detailed report
             </Link>
-            {/* <Link href={`/dashboard/u/${announcement.id}?type=${announcement.Questiontype}`}> detailed report</Link> */}
+            <Link href={`/dashboard/u/${announcement.id}?type=${announcement.Questiontype}`}> copy link</Link>
           </div>
         ))}
       </div>
