@@ -1,0 +1,14 @@
+@media screen and (max-width: 450px) {
+  .tbc {
+    max-width: 85vw;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .inps {
+    flex-direction: column;
+  }
+  .btsub{
+    min-width: 100%;
+  }
+}

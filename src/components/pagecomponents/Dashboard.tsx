@@ -444,22 +444,20 @@ export const Dashboard = ({ children }: any) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <Link href="/profile">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled>
                     <LifeBuoy className="mr-2 h-4 w-4" />
                     <span>Support</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
-                <DropdownMenuItem>
+                <DropdownMenuItem disabled>
                   <CreditCard className="mr-2 h-4 w-4" />
                   <span>Billing</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem disabled>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -492,21 +490,8 @@ export const Dashboard = ({ children }: any) => {
               >
                 Joined Classroom
               </Link>
-              <Link
-                href="/dashboard/transcation"
-                onClick={() => setisclose(true)}
-              >
-                Transcations
-              </Link>
-              <Link
-                href="/dashboard/helpsupport"
-                onClick={() => setisclose(true)}
-              >
-                Help & Support
-              </Link>
-              <Link href="/dashboard/settings" onClick={() => setisclose(true)}>
-                Setting
-              </Link>
+              <div> Community </div>
+              <div>Setting</div>
             </div>
           </div>
           <div

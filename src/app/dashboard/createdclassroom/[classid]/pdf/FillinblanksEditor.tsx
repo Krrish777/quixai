@@ -134,6 +134,7 @@ const FillinblanksEditor: React.FC<ChildProps> = (props: ChildProps) => {
       props.setFormState("Error");
     }
   }
+  console.log(props.completion);
 
   return (
     <div className={`place-items-center grid ${style.grd2}`}>

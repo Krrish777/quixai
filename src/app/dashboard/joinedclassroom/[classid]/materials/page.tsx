@@ -1,96 +1,138 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+"use client";
+
 import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { Separator } from "@/components/ui/separator"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import styles from "./styles.module.css";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth, db, } from "@/lib/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { toast } from "@/components/ui/use-toast";
+import CryptoJS from "crypto-js";
 
-const invoices = [
-    {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV006",
-        paymentStatus: "Pending",
-        totalAmount: "$200.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV007",
-        paymentStatus: "Unpaid",
-        totalAmount: "$300.00",
-        paymentMethod: "Credit Card",
-    },
-]
-
-export default function InpuMaterialtFile() {
-    return (
-        <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-5">
-                {/* <Separator /> */}
-                <div className="flex gap-5">
-                    <Input id="picture" type="file" />
-                    <Input type="text" placeholder="Context" />
-                    <Button type="submit">Upload</Button>
-                </div>
-                <Separator />
-            </div>
-            <Table>
-                
-                {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[100px]">Invoice</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {invoices.map((invoice) => (
-                        <TableRow key={invoice.invoice}>
-                            <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                            <TableCell>{invoice.paymentStatus}</TableCell>
-                            <TableCell>{invoice.paymentMethod}</TableCell>
-                            <TableCell className="text-right">{invoice.totalAmount}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
-    )
+interface materials {
+  id?: string;
+  context: string;
+  file: string;
+  createdAt: number;
 }
 
+export default function InpuMaterialtFile() {
+  const [user, setuser] = useState<User | null>(null);
+  const [materials, setmaterials] = useState<materials[]>([]);
+  const params = useParams();
+  const classid = params.classid;
+
+  const fetchAnnouncements = useCallback(async () => {
+    const CACHE_EXPIRATION = 10 * 60 * 1000;
+    const currentTime = new Date().getTime();
+
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
+        setuser(authUser);
+        const CACHE_KEY = `${authUser.uid.slice(0, 5)}materials${classid}`;
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
+
+        if (
+          cachedData &&
+          cachedTimestamp &&
+          currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION
+        ) {
+          const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
+          const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+          const parsedData = JSON.parse(decryptedData) as materials[];
+          setmaterials(parsedData);
+        } else {
+          try {
+            const q = query(
+              collection(db, `Classrooms/${classid}/materials`),
+              orderBy("createdAt", "desc")
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            const classroomsData: materials[] = [];
+            querySnapshot.forEach((doc) => {
+              classroomsData.push({
+                id: doc.id,
+                ...doc.data(),
+              } as materials);
+            });
+
+            const dataToEncrypt = JSON.stringify(classroomsData);
+            const encryptedData = CryptoJS.AES.encrypt(
+              dataToEncrypt,
+              CACHE_KEY
+            ).toString();
+
+            localStorage.setItem(CACHE_KEY, encryptedData);
+            localStorage.setItem(
+              `${CACHE_KEY}_timestamp`,
+              currentTime.toString()
+            );
+
+            setmaterials(classroomsData);
+          } catch (error) {
+            console.log(error);
+            toast({
+              variant: "destructive",
+              title: "Uh oh! Something went wrong.",
+              description: "There was a problem with your request.",
+            });
+          }
+        }
+      } else {
+        toast({
+          title: "No user authenticated",
+          description: "Please login and try again",
+        });
+        console.log("No user is currently authenticated");
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [classid]);
+
+  useEffect(() => {
+    if (classid) {
+      fetchAnnouncements();
+    }
+  }, [classid, fetchAnnouncements]);
+
+  return (
+    <div className={` overflow-hidden ${styles.tbc}`}>
+      <Table>
+        {/* <TableCaption>Materials for refrences</TableCaption> */}
+        <TableHeader>
+          <TableRow>
+            <TableHead>Context</TableHead>
+            <TableHead>View Material</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {materials.map((material) => (
+            <TableRow key={material.id}>
+              <TableCell>{material.context}</TableCell>
+              <TableCell className="font-medium">
+                <a href={material.file} download>
+                  &nbsp; View Material
+                </a>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}

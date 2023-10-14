@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import styles from "@/components/pagecomponents/class.module.css";
-import Link from "next/link";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { Icons } from "@/components/ui/Icons";
-import { toast } from "@/components/ui/use-toast";
 import CryptoJS from "crypto-js";
+import { CopyIcon } from "lucide-react";
+import { useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import styles from "./styles.module.css";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { toast } from "@/components/ui/use-toast";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 type Classroom = {
   id: string;
@@ -22,8 +22,13 @@ type Classroom = {
   students: string[];
 };
 
-export default function Createddclassroom() {
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+const Classlayoutdetails = () => {
+  const params = useParams();
+  const [Classname, setClasssname] = useState<string>();
+  const [user, setuser] = useState<User | null>(null);
+  const classid = Array.isArray(params.classid)
+    ? params.classid.join("")
+    : params.classid;
 
   useEffect(() => {
     const CACHE_EXPIRATION = 10 * 60 * 1000;
@@ -31,6 +36,7 @@ export default function Createddclassroom() {
 
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       if (authUser) {
+        setuser(authUser);
         const CACHE_KEY = `${authUser.uid.slice(0, 5)}JoinedclassroomsData`;
         const cachedData = localStorage.getItem(CACHE_KEY);
         const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
@@ -44,7 +50,10 @@ export default function Createddclassroom() {
           const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
 
           const parsedData = JSON.parse(decryptedData) as Classroom[];
-          setClassrooms(parsedData);
+          const foundObject = parsedData.find((item) => item.id === classid);
+          if (foundObject) {
+            setClasssname(foundObject?.Classname);
+          }
         } else {
           try {
             const q = query(
@@ -60,7 +69,10 @@ export default function Createddclassroom() {
 
             const classroomsData: Classroom[] = [];
             querySnapshot.forEach((doc) => {
-              classroomsData.push({ id: doc.id, ...doc.data() } as Classroom);
+              classroomsData.push({
+                id: doc.id,
+                ...doc.data(),
+              } as Classroom);
             });
 
             const dataToEncrypt = JSON.stringify(classroomsData);
@@ -75,20 +87,17 @@ export default function Createddclassroom() {
               currentTime.toString()
             );
 
-            setClassrooms(classroomsData);
+            const foundObject = classroomsData.find(
+              (item) => item.id === classid
+            );
+            if (foundObject) {
+              setClasssname(foundObject?.Classname);
+            }
           } catch (error) {
-            toast({
-              variant: "destructive",
-              title: "Uh oh! Something went wrong.",
-              description: "There was a problem with your request.",
-            });
+            console.log("there was a error");
           }
         }
       } else {
-        toast({
-          title: "No user authenticated",
-          description: "Please login and try again",
-        });
         console.log("No user is currently authenticated");
       }
     });
@@ -96,30 +105,30 @@ export default function Createddclassroom() {
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [classid]);
 
   return (
-    <div className={styles.grid}>
-      {classrooms.map((classroom) => (
-        <Link
-          key={classroom.id}
-          href={`/dashboard/joinedclassroom/${classroom.id}/announcement`}
-        >
-          <div className={`${styles.class}  rounded-sm border`}>
-            <div className={`${styles.id} bg-secondary rounded-t-sm`}>
-              <Icons.Classcard />
-              <div>
-                <div>{classroom.Classname}</div>
-                <div>{classroom.Section}</div>
-              </div>
-            </div>
-            <div className="flex flex-col p-3 gap-2">
-              <div>Teacher : {classroom.TeacherName}</div>
-              <div>Subject : {classroom.Subject}</div>
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className="space-y-1">
+      <h2 className={`text-2xl font-semibold tracking-tight ${styles.clsname}`}>
+        {Classname ? Classname : ""}
+      </h2>
+      <div
+        className={`${styles.cpnam} text-sm text-muted-foreground  flex leading-1 items-center`}
+      >
+        <CopyIcon
+          className="h-3 cursor-pointer"
+          onClick={() => {
+            navigator.clipboard.writeText(classid);
+            toast({
+              title: "Class id copied!",
+            });
+          }}
+        />
+        <div className={`${styles.clscd}`}>Class code: </div>
+        {classid.substring(0, 7)}...
+      </div>
     </div>
   );
-}
+};
+
+export default Classlayoutdetails;

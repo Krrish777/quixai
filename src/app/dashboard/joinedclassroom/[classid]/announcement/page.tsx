@@ -5,17 +5,14 @@ import styles from "../styles.module.css";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -31,14 +28,16 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { BellIcon, EyeNoneIcon, PersonIcon } from "@radix-ui/react-icons";
+import { User, onAuthStateChanged } from "firebase/auth";
+import CryptoJS from "crypto-js";
 
 type Announcement = {
+  id?: string;
   Message: string;
   createdAt: number | string;
 };
@@ -46,19 +45,19 @@ type Announcement = {
 const formSchema = z.object({
   message: z
     .string()
-    .min(3, {
-      message: "Minimun 3 letters should be there",
+    .min(5, {
+      message: "Minimun 10 letters should be there",
     })
-    .max(1000, {
-      message: "Max 50 letters should be there",
+    .max(10000, {
+      message: "Max 10000 letters should be there",
     }),
 });
 
 const Announcement = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [user, setuser] = useState<User | null>(null);
   const params = useParams();
   const classid = params.classid;
-  const user = auth.currentUser;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,71 +66,91 @@ const Announcement = () => {
     },
   });
 
-  const CACHE_KEY = `announcementsData${classid}`;
-  const CACHE_EXPIRATION = 10 * 60 * 1000;
+  const fetchAnnouncements = useCallback(async () => {
+    const CACHE_EXPIRATION = 10 * 60 * 1000;
+    const currentTime = new Date().getTime();
 
-  const fetchAnnouncements = async () => {
-    try {
-      const cachedData = localStorage.getItem(CACHE_KEY);
-      const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
-      const currentTime = new Date().getTime();
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
+        setuser(authUser);
+        const CACHE_KEY = `${authUser.uid.slice(
+          0,
+          5
+        )}announcementsData${classid}`;
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedTimestamp = localStorage.getItem(`${CACHE_KEY}_timestamp`);
 
-      if (
-        cachedData &&
-        cachedTimestamp &&
-        currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION
-      ) {
-        const cachedAnnouncements = JSON.parse(cachedData);
-        setAnnouncements(cachedAnnouncements);
+        if (
+          cachedData &&
+          cachedTimestamp &&
+          currentTime - parseInt(cachedTimestamp) < CACHE_EXPIRATION
+        ) {
+          const decryptedBytes = CryptoJS.AES.decrypt(cachedData, CACHE_KEY);
+          const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+          const parsedData = JSON.parse(decryptedData) as Announcement[];
+          setAnnouncements(parsedData);
+        } else {
+          try {
+            const q = query(
+              collection(db, `Classrooms/${classid}/Announcements`),
+              orderBy("createdAt", "desc")
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            const classroomsData: Announcement[] = [];
+            querySnapshot.forEach((doc) => {
+              classroomsData.push({
+                id: doc.id,
+                ...doc.data(),
+              } as Announcement);
+            });
+
+            const dataToEncrypt = JSON.stringify(classroomsData);
+            const encryptedData = CryptoJS.AES.encrypt(
+              dataToEncrypt,
+              CACHE_KEY
+            ).toString();
+
+            localStorage.setItem(CACHE_KEY, encryptedData);
+            localStorage.setItem(
+              `${CACHE_KEY}_timestamp`,
+              currentTime.toString()
+            );
+
+            setAnnouncements(classroomsData);
+          } catch (error) {
+            toast({
+              variant: "destructive",
+              title: "Uh oh! Something went wrong.",
+              description: "There was a problem with your request.",
+            });
+          }
+        }
       } else {
-        const querySnapshot = await getDocs(
-          query(
-            collection(db, `Classrooms/${classid}/Announcements`),
-            orderBy("createdAt", "desc")
-          )
-        );
-        const announcementData: Announcement[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const announcement: Announcement = doc.data() as Announcement;
-
-          const formattedDate = new Date(
-            announcement.createdAt
-          ).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          });
-
-          announcement.createdAt = formattedDate;
-
-          announcementData.push(announcement);
+        toast({
+          title: "No user authenticated",
+          description: "Please login and try again",
         });
-
-        localStorage.setItem(CACHE_KEY, JSON.stringify(announcementData));
-        localStorage.setItem(`${CACHE_KEY}_timestamp`, currentTime.toString());
-
-        setAnnouncements(announcementData);
+        console.log("No user is currently authenticated");
       }
-    } catch (error) {
-      console.error("Error fetching announcements:", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem while fetching announcments",
-      });
-    }
-  };
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [classid]);
 
   useEffect(() => {
     if (classid) {
       fetchAnnouncements();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classid]);
+  }, [classid, fetchAnnouncements]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (user && classid) {
+      const CACHE_KEY = `${user.uid.slice(0, 5)}announcementsData${classid}`;
       const Datatobeadded: Announcement = {
         Message: values.message,
         createdAt: Date.now(),
@@ -146,9 +165,10 @@ const Announcement = () => {
             title: "Announcement sent!",
             description: "Announcement was Sucessfull sent",
           });
+          form.setValue("message", "");
         });
       } catch (error) {
-        console.error("Error updating document");
+        console.error("Error sending announcement");
         toast({
           variant: "destructive",
           title: "Uh oh! Something went wrong.",
@@ -202,7 +222,6 @@ const Announcement = () => {
           </div>
           <Separator className="my-4" />
           <div className="space-y-4">
-            {/* <h3 className="text-lg font-medium">Announcemnts :</h3> */}
             {announcements.map((announcement, index) => (
               <div className="grid gap-6 bg-accent rounded-sm p-2" key={index}>
                 <div className="cursor-pointer">
@@ -210,7 +229,10 @@ const Announcement = () => {
                     Announcement :
                   </div>
                   <div className="text-muted-foreground text-[13px]">
-                  {new Date(announcement.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                    {new Date(announcement.createdAt).toLocaleDateString(
+                      undefined,
+                      { year: "numeric", month: "short", day: "numeric" }
+                    )}
                   </div>
                   <div className="text-muted-foreground text-[15px] hover:text-foreground">
                     {announcement.Message.charAt(0).toUpperCase() +

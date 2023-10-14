@@ -38,7 +38,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "@/components/ui/use-toast";
 import CryptoJS from "crypto-js";
-import { getBlob, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
 interface materials {

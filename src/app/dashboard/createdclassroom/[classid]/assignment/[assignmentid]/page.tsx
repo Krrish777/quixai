@@ -16,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,11 +32,11 @@ import {
 import { db } from "@/lib/firebase";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./styles.module.css";
-
 import { Viewer, Worker } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+import { toast } from "@/components/ui/use-toast";
 
 interface SubmittedAnswer {
   question: string;
@@ -49,12 +48,15 @@ interface SubmittedAnswer {
 interface SubmittedAssignment {
   id: string;
   studentUUID: string;
+  studentEmail: string;
+  studentName: string;
   assignmentId: string;
   scoredMarks: number;
   selectedanswer: SubmittedAnswer[];
   totalmarks: number;
   instructions?: string;
   selectedpdf?: string;
+  topic?: string;
 }
 
 const Page = () => {
@@ -75,39 +77,42 @@ const Page = () => {
   const classid = params.classid;
   const assignmentId = params.assignmentid;
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  useEffect(() => {
-    async function submittedassignemnt() {
-      try {
-        const submittedAssignmentsRef = collection(
-          db,
-          `Classrooms/${classid}/submitted_assignment`
-        );
 
-        const submittedAssignmentsQuery = query(
-          submittedAssignmentsRef,
-          where("assignmentId", "==", assignmentId)
-        );
+  async function submittedassignemnt() {
+    try {
+      const submittedAssignmentsRef = collection(
+        db,
+        `Classrooms/${classid}/submitted_assignment`
+      );
 
-        const submittedAssignmentsSnapshot = await getDocs(
-          submittedAssignmentsQuery
-        );
+      const submittedAssignmentsQuery = query(
+        submittedAssignmentsRef,
+        where("assignmentId", "==", assignmentId)
+      );
 
-        const data: SubmittedAssignment[] = [];
-        submittedAssignmentsSnapshot.forEach((doc: DocumentData) => {
-          const assignmentData: SubmittedAssignment = {
-            id: doc.id,
-            ...doc.data(),
-          };
-          data.push(assignmentData);
-        });
+      const submittedAssignmentsSnapshot = await getDocs(
+        submittedAssignmentsQuery
+      );
 
-        setSubmittedAssignments(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+      const data: SubmittedAssignment[] = [];
+      submittedAssignmentsSnapshot.forEach((doc: DocumentData) => {
+        const assignmentData: SubmittedAssignment = {
+          id: doc.id,
+          ...doc.data(),
+        };
+        data.push(assignmentData);
+      });
+
+      setSubmittedAssignments(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
+  }
 
-    submittedassignemnt();
+  useEffect(() => {
+    if (classid) {
+      submittedassignemnt();
+    }
   }, [classid, assignmentId]);
 
   function onupdate(
@@ -137,11 +142,19 @@ const Page = () => {
     }
 
     if (updateingUserNewMarks === undefined || isNaN(updateingUserNewMarks)) {
-      alert("Please enter a valid number for assignment marks.");
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: `Please enter a valid number for assignment marks.`,
+      });
       return;
     }
     if (updateingTotalMarks === undefined || isNaN(updateingTotalMarks)) {
-      alert("Total marks are not defined for this assignment.");
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: `Total marks are not defined for this assignment.`,
+      });
       return;
     }
 
@@ -149,7 +162,11 @@ const Page = () => {
       updateingUserNewMarks < 0 ||
       updateingUserNewMarks > updateingTotalMarks
     ) {
-      alert(`Assignment marks must be between 0 and ${updateingTotalMarks}.`);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: `Assignment marks must be between 0 and ${updateingTotalMarks}`,
+      });
       return;
     }
 
@@ -167,12 +184,20 @@ const Page = () => {
 
         updateDoc(assignmentRef, updateData)
           .then(() => {
-            alert("Assignment marks updated successfully.");
             setOpen(false);
+            submittedassignemnt();
+            toast({
+              title: "Updated sucessfull!",
+              description: "Assignment marks updated successfully.",
+            });
           })
           .catch((error) => {
+            toast({
+              variant: "destructive",
+              title: "Uh oh! Something went wrong.",
+              description: `An error occurred while updating assignment marks.`,
+            });
             console.error("Error updating assignment marks:", error);
-            alert("An error occurred while updating assignment marks.");
           });
       } else {
         alert("Assignment ID is undefined.");
@@ -186,8 +211,6 @@ const Page = () => {
       className={`grid grid-cols-[2fr_3fr] gap-5 mt-3 ${styles.cls} ${styles.parent}`}
     >
       <div className={`${styles.gridone}`}>
-        {/* no student check  */}
-        {/* refrech on update */}
         <Card>
           <CardHeader className={`col-span-3 ${styles.stdname}`}>
             <CardTitle>Students Marks</CardTitle>
@@ -213,10 +236,12 @@ const Page = () => {
                     }}
                   >
                     <div className="text-sm font-medium leading-none ">
-                      Jackson Lee
+                      {assignment.studentName}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      jackson.lee@email.com
+                    <div
+                      className={`text-sm text-muted-foreground ${styles.email}`}
+                    >
+                      {assignment.studentEmail}
                     </div>
                   </div>
                   <div
@@ -313,13 +338,14 @@ const Page = () => {
                 )}
                 {type === "WrittenAssignment" && (
                   <div>
-                    {selectedProfileAssignment.selectedpdf}
                     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                      <div style={{ height: "750px" }}>
+                      <div
+                        style={{ height: "750px" }}
+                        className={styles.pdfwidth}
+                      >
                         <Viewer
                           fileUrl={`${selectedProfileAssignment.selectedpdf}`}
-                          // plugins={[defaultLayoutPluginInstance]}
-                          // withCredentials={true}
+                          plugins={[defaultLayoutPluginInstance]}
                         />
                       </div>
                     </Worker>
@@ -365,8 +391,6 @@ const Page = () => {
 };
 
 export default Page;
-
-
 
 // https://thehotcode.com/firebase-gcloud-fix-cors-issues/
 // https://www.youtube.com/watch?v=WBpHWm8FL_E
