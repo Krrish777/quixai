@@ -107,7 +107,9 @@ const Page = () => {
               if (foundObject) {
                 setClasssname(foundObject?.students || []);
               }
-            } catch (error) {}
+            } catch (error) {
+              console.log("there was error");
+            }
           }
         } else {
           console.log("No user is currently authenticated");
