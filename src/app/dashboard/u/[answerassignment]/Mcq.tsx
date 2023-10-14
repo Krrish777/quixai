@@ -7,12 +7,24 @@ import { auth } from "@/lib/firebase";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 
 interface Question {
   question: string;
   options: string[];
   answer: string;
 }
+
+type SubmittedAssignment = {
+  studentUUID: string;
+  studentEmail: string;
+  studentName: string;
+  assignmentId: string;
+  scoredMarks: number;
+  selectedanswer: any;
+  totalmarks: number;
+  submissionDate: number;
+};
 
 interface QidProps {
   questions: Question[];
@@ -44,31 +56,58 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
   };
 
   async function Sendassignment() {
-    const score = calculateScore();
-    if (user && assignmentid && type === "Mcq") {
-      const assignmentData = questions.map((question, index) => ({
-        question: question.question,
-        options: question.options,
-        answer: question.answer,
-        selectedAnswer: selectedAnswers[index],
-      }));
+    if (
+      user &&
+      classid &&
+      assignmentid &&
+      type === "Mcq" &&
+      user.uid &&
+      user.email &&
+      user.displayName
+    ) {
+      try {
+        const score = calculateScore();
+        const assignmentData = questions.map((question, index) => ({
+          question: question.question,
+          options: question.options,
+          answer: question.answer,
+          selectedAnswer: selectedAnswers[index],
+        }));
 
-      const Datatobeadded: any = {
-        studentUUID: user.uid,
-        assignmentId: assignmentid,
-        scoredMarks: score,
-        selectedanswer: assignmentData,
-        totalmarks,
-        submissionDate: Date.now(),
-      };
+        const Datatobeadded: SubmittedAssignment = {
+          studentUUID: user.uid,
+          studentEmail: user.email,
+          studentName: user.displayName,
+          assignmentId: assignmentid as string,
+          scoredMarks: score,
+          selectedanswer: assignmentData,
+          totalmarks,
+          submissionDate: Date.now(),
+        };
 
-      console.log(Datatobeadded);
-      const projectDocRef = await addDoc(
-        collection(db, `Userssubmitted_assignment`),
-        Datatobeadded
-      );
-
-      router.back();
+        console.log(Datatobeadded);
+        try {
+          await addDoc(
+            collection(db, `Classrooms/${classid}/submitted_assignment`),
+            Datatobeadded
+          );
+          const CACHE_KEY = `${user.uid.slice(
+            0,
+            5
+          )}joinedclassroom${classid}assignmnets`;
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(`${CACHE_KEY}_timestamp`);
+          router.back();
+        } catch {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your request.",
+          });
+        }
+      } catch (error) {
+        alert("there was a error on mapping");
+      }
     } else {
       console.log("No user is currently authenticated or classid is missing");
     }
@@ -85,44 +124,48 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex flex-col p-2 justify-center mb-5 items-center ">
-        <div className={`flex gap-5 `}>
-          <div>Topic : {topic}</div>
-          <br />
-        </div>
-        <div className="text-muted-foreground">
-          Mark your answer and submit the form
-        </div>
-      </div>
-      {questions.map((question, index) => (
-        <div key={index} className="mb-4 bg-muted p-4 rounded-lg">
-          <div className="mb-2">{question.question}</div>
-          <div>
-            {question.options.map((option, optionIndex) => (
-              <div key={optionIndex} className="mb-2">
-                <input
-                  type="radio"
-                  id={`q${index}-option${optionIndex}`}
-                  name={`q${index}`}
-                  value={option}
-                  checked={selectedAnswers[index] === option}
-                  onChange={() => handleOptionChange(index, option)}
-                  className="mr-2"
-                />
-                <label
-                  htmlFor={`q${index}-option${optionIndex}`}
-                  className="cursor-pointer"
-                >
-                  {option}
-                </label>
-              </div>
-            ))}
+    <>
+      {topic && questions && selectedAnswers && (
+        <div className="p-4">
+          <div className="flex flex-col p-2 justify-center mb-5 items-center ">
+            <div className={`flex gap-5 `}>
+              <div>Topic : {topic}</div>
+              <br />
+            </div>
+            <div className="text-muted-foreground">
+              Mark your answer and submit the form
+            </div>
           </div>
+          {questions.map((question, index) => (
+            <div key={index} className="mb-4 bg-muted p-4 rounded-lg">
+              <div className="mb-2">{question.question}</div>
+              <div>
+                {question.options.map((option, optionIndex) => (
+                  <div key={optionIndex} className="mb-2">
+                    <input
+                      type="radio"
+                      id={`q${index}-option${optionIndex}`}
+                      name={`q${index}`}
+                      value={option}
+                      checked={selectedAnswers[index] === option}
+                      onChange={() => handleOptionChange(index, option)}
+                      className="mr-2"
+                    />
+                    <label
+                      htmlFor={`q${index}-option${optionIndex}`}
+                      className="cursor-pointer"
+                    >
+                      {option}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <Button onClick={Sendassignment}>Submit Answers</Button>
         </div>
-      ))}
-      <Button onClick={Sendassignment}>Submit Answers</Button>
-    </div>
+      )}
+    </>
   );
 };
 

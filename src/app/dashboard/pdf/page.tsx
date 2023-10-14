@@ -58,7 +58,7 @@ const formSchema = z.object({
     .max(40, {
       message: "Topic must be at most 40 characters.",
     }),
-  file: z.instanceof(File),
+  file: z.custom<File>((v) => v instanceof File),
   topic: z
     .string()
     .min(2, {

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
 import { auth, db, storage } from "@/lib/firebase";
 import axios from "axios";
 import { addDoc, collection } from "firebase/firestore";
@@ -14,13 +15,24 @@ interface QidProps {
   topic: string;
   instructions: string;
   totalmarks: number;
-  // Questiontype: "WrittenAssignment";
 }
+
+type SubmittedAssignment = {
+  studentUUID: string;
+  studentEmail: string;
+  studentName: string;
+  assignmentId: string;
+  scoredMarks: number;
+  topic: string;
+  instructions: string;
+  selectedpdf: any;
+  totalmarks: number;
+  submissionDate: number;
+};
 
 const Material: React.FC<QidProps> = ({ topic, instructions, totalmarks }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const user = auth.currentUser;
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const params = useParams();
   const classid = params.classid;
   const assignmentid = params.answerassignment;
@@ -43,7 +55,15 @@ const Material: React.FC<QidProps> = ({ topic, instructions, totalmarks }) => {
         return;
       }
 
-      if (user && classid && assignmentid && type === "WrittenAssignment") {
+      if (
+        user &&
+        classid &&
+        assignmentid &&
+        type === "WrittenAssignment" &&
+        user.uid &&
+        user.email &&
+        user.displayName
+      ) {
         try {
           const storageRef = ref(storage, `${classid}/${selectedFile?.name}`);
           const snapshot = await uploadBytes(storageRef, selectedFile);
@@ -51,9 +71,12 @@ const Material: React.FC<QidProps> = ({ topic, instructions, totalmarks }) => {
           await getDownloadURL(snapshot.ref).then(async (downloadURL) => {
             console.log("File available at", downloadURL);
 
-            const Datatobeadded: any = {
+            const Datatobeadded: SubmittedAssignment = {
               studentUUID: user.uid,
-              assignmentId: assignmentid,
+              studentEmail: user.email as string,
+              studentName: user.displayName as string,
+              assignmentId: assignmentid as string,
+              scoredMarks: 0,
               topic,
               instructions,
               selectedpdf: downloadURL,
@@ -61,16 +84,28 @@ const Material: React.FC<QidProps> = ({ topic, instructions, totalmarks }) => {
               submissionDate: Date.now(),
             };
 
-            console.log(Datatobeadded);
-            const projectDocRef = await addDoc(
-              collection(db, `Classrooms/${classid}/submitted_assignment`),
-              Datatobeadded
-            ).then(() => {
+            try {
+              await addDoc(
+                collection(db, `Classrooms/${classid}/submitted_assignment`),
+                Datatobeadded
+              );
+              const CACHE_KEY = `${user.uid.slice(
+                0,
+                5
+              )}joinedclassroom${classid}assignmnets`;
+              localStorage.removeItem(CACHE_KEY);
+              localStorage.removeItem(`${CACHE_KEY}_timestamp`);
               router.back();
-            });
+            } catch {
+              toast({
+                variant: "destructive",
+                title: "Uh oh! Something went wrong.",
+                description: "There was a problem with your request.",
+              });
+            }
           });
         } catch (error) {
-          console.log(error);
+          alert("there was a error on mapping");
         }
       } else {
         console.log("No user is currently authenticated or classid is missing");

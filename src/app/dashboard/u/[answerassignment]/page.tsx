@@ -47,11 +47,13 @@ const Page = ({
       type === "Mcq" ||
       type === "TF" ||
       type === "Fillinblanks" ||
-      type === "Shortquestions"
+      type === "Shortanswers"
     ) {
       fetchAssignmentMcq(params.classid, params.answerassignment);
     } else if (type === "WrittenAssignment") {
       fetchwrittenassignment(params.classid, params.answerassignment);
+    } else {
+      alert("There was a error with the assignments (Type not supported)");
     }
   }, [params.classid, params.answerassignment, type]);
 
@@ -59,7 +61,7 @@ const Page = ({
     try {
       const assignmentRef = doc(
         db,
-        `Userassignments/${assignmentId}`
+        `Classrooms/${classId}/Assignment/${assignmentId}`
       );
 
       const assignmentSnapshot = await getDoc(assignmentRef);
@@ -78,7 +80,7 @@ const Page = ({
     try {
       const assignmentRef = doc(
         db,
-        `Userassignments/${assignmentId}`
+        `Classrooms/${classId}/Assignment/${assignmentId}`
       );
 
       const assignmentSnapshot = await getDoc(assignmentRef);
@@ -126,7 +128,7 @@ const Page = ({
           totalmarks={materialassignment?.totalmarks || 0}
         />
       );
-    case "Shortquestions":
+    case "Shortanswers":
       return (
         <Shortquestions
           questions={assignment?.questionDatatoadd.questions || []}
