@@ -224,7 +224,7 @@ export default function ProfileForm() {
                   <FormItem>
                     <FormLabel>Assignment name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex:Assignment 6" {...field} />
+                      <Input placeholder="Ex:Assignment 6" {...field} autoComplete="off"/>
                     </FormControl>
                     <FormDescription>
                       Enter ther Assignment name
@@ -240,7 +240,7 @@ export default function ProfileForm() {
                   <FormItem>
                     <FormLabel>Topic</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter topic" {...field} />
+                      <Input placeholder="Enter topic" {...field} autoComplete="off"/>
                     </FormControl>
                     <FormDescription>
                       Explain your topic in 3 or 5 words for better results
