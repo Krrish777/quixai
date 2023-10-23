@@ -31,11 +31,7 @@ type materialtype = {
   Questiontype: "WrittenAssignment";
 };
 
-const Page = ({
-  params,
-}: {
-  params: { answerassignment: string; classid: string };
-}) => {
+const Page = ({ params }: { params: { answerassignment: string } }) => {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const [assignment, setassignment] = useState<AssignmentData | null>();
@@ -49,20 +45,17 @@ const Page = ({
       type === "Fillinblanks" ||
       type === "Shortanswers"
     ) {
-      fetchAssignmentMcq(params.classid, params.answerassignment);
+      fetchAssignmentMcq(params.answerassignment);
     } else if (type === "WrittenAssignment") {
-      fetchwrittenassignment(params.classid, params.answerassignment);
+      fetchwrittenassignment(params.answerassignment);
     } else {
       alert("There was a error with the assignments (Type not supported)");
     }
-  }, [params.classid, params.answerassignment, type]);
+  }, [params.answerassignment, type]);
 
-  async function fetchwrittenassignment(classId: string, assignmentId: string) {
+  async function fetchwrittenassignment(assignmentId: string) {
     try {
-      const assignmentRef = doc(
-        db,
-        `Classrooms/${classId}/Assignment/${assignmentId}`
-      );
+      const assignmentRef = doc(db, `Userassignments/${assignmentId}`);
 
       const assignmentSnapshot = await getDoc(assignmentRef);
 
@@ -76,12 +69,9 @@ const Page = ({
     }
   }
 
-  async function fetchAssignmentMcq(classId: string, assignmentId: string) {
+  async function fetchAssignmentMcq(assignmentId: string) {
     try {
-      const assignmentRef = doc(
-        db,
-        `Classrooms/${classId}/Assignment/${assignmentId}`
-      );
+      const assignmentRef = doc(db, `Userassignments/${assignmentId}`);
 
       const assignmentSnapshot = await getDoc(assignmentRef);
 

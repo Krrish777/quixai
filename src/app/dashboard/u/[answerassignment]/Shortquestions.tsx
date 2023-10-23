@@ -34,7 +34,6 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
   const router = useRouter();
   const user = auth.currentUser;
   const params = useParams();
-  const classid = params.classid;
   const assignmentid = params.answerassignment;
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
@@ -53,7 +52,6 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
     console.log(selectedAnswers);
     if (
       user &&
-      classid &&
       assignmentid &&
       type === "Shortanswers" &&
       user.uid &&
@@ -80,15 +78,9 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
         console.log(Datatobeadded);
         try {
           await addDoc(
-            collection(db, `Classrooms/${classid}/submitted_assignment`),
+            collection(db, `Userssubmitted_assignment`),
             Datatobeadded
           );
-          const CACHE_KEY = `${user.uid.slice(
-            0,
-            5
-          )}joinedclassroom${classid}assignmnets`;
-          localStorage.removeItem(CACHE_KEY);
-          localStorage.removeItem(`${CACHE_KEY}_timestamp`);
           router.back();
         } catch {
           toast({
