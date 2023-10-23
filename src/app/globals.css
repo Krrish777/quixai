@@ -57,3 +57,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 
+@font-face { 
+  font-family: "Rubik"; 
+  src: url('/assets/fonts/CalSans-SemiBold.otf'); 
+  font-weight: normal; 
+  font-style: normal; 
+}  */
