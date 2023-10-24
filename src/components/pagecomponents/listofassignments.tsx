@@ -36,7 +36,7 @@ const Listofassignments = () => {
           });
         });
         setAnnouncements(announcementsData);
-        console.log(announcementsData)
+        console.log(announcementsData);
       }
     } catch (error) {
       console.error(error);
@@ -69,15 +69,43 @@ const Listofassignments = () => {
       <div className={styles.r}>
         {announcements.map((announcement) => (
           <div key={announcement.id} className={styles.recentobj}>
-            <div>Class: {announcement.assignmentname}</div>
-            <div>Subject: {announcement.noquestions}</div>
-            <div>Topic: {announcement.topic}</div>
+            <div>
+              <div style={{ whiteSpace: "pre" }}>
+                Name:
+                {announcement.assignmentname.length > 5
+                  ? ` ${announcement.assignmentname.substring(0, 5)}...`
+                  : `${announcement.assignmentname}`.padEnd(9, " ")}
+              </div>
+            </div>
+            <div style={{ whiteSpace: "pre" }}>
+              Topic:
+              {announcement.topic.length > 5
+                ? ` ${announcement.topic.substring(0, 5)}...`
+                : `${announcement.topic}`.padEnd(9, " ")}
+            </div>
+            <div>
+              No of Questions:
+              {announcement.noquestions}
+            </div>
+
             <Link
               href={`/dashboard/${announcement.id}?type=${announcement.Questiontype}`}
             >
-              detailed report
+              Get Detailed report
             </Link>
-            <Link href={`/dashboard/u/${announcement.id}?type=${announcement.Questiontype}`}> copy link</Link>
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/dashboard/u/${announcement.id}?type=${announcement.Questiontype}`
+                );
+                toast({
+                  title: "Link copied",
+                });
+              }}
+            >
+              Copy assignment link
+            </div>
           </div>
         ))}
       </div>

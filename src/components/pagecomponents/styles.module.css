@@ -146,6 +146,15 @@
   font-weight: 700;
   padding: 2rem 2rem 0 2rem;
 }
+
+.recentobjj {
+  border-width: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
 .recentobj {
   border-width: 1px;
   border-radius: 0.5rem;
@@ -224,6 +233,26 @@
   }
 }
 
+@media screen and (max-width: 1040px) {
+  .recentobj {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .recentobj {
+    display: grid;
+    grid-template-columns: 1fr ;
+    gap: .5rem;
+    text-align: center;
+  }
+}
+
+
+
 @media screen and (max-width: 600px) {
   .services {
     gap: 0.9rem;
@@ -236,9 +265,6 @@
     display: flex;
   }
   
-  .recentobj {
-    flex-direction: column;
-  }
   .services {
     padding: 1rem;
   }

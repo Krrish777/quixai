@@ -5,7 +5,7 @@ import TF from "./Tf";
 import Blanks from "./Blanks";
 import Material from "./Material";
 import { useSearchParams } from "next/navigation";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Shortquestions from "./Shortquestions";
 

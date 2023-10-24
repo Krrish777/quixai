@@ -214,7 +214,7 @@ export default function ProfileForm() {
   }
 
   return (
-    <div className={`${styles.grd} mt-3`}>
+    <div className={`${styles.grd} p-4`}>
       <div className={`p-1 ${styles.grd1} `}>
         <div className="space-y-3">
           <div>
@@ -224,7 +224,7 @@ export default function ProfileForm() {
             </p>
           </div>
           <div
-            className={`flex space-x-2 inline-flex  justify-center rounded-md bg-muted p-1 text-muted-foreground place-items-center ${styles.tabs} mb-3`}
+            className={`flex space-x-2 inline-flex  justify-center rounded-md bg-muted p-1 text-muted-foreground place-items-center ${styles.tabs} mb-4`}
           >
             <div
               onClick={() => {
@@ -254,7 +254,7 @@ export default function ProfileForm() {
                 "justify-start cursor-pointer "
               )}
             >
-              True or false
+              True&nbsp;or&nbsp;false
             </div>
             <div
               onClick={() => {
@@ -269,7 +269,7 @@ export default function ProfileForm() {
                 "justify-start cursor-pointer"
               )}
             >
-              Fill in blanks
+              Fill&nbsp;in&nbsp;blanks
             </div>
             <div
               onClick={() => {
@@ -284,7 +284,7 @@ export default function ProfileForm() {
                 "justify-start cursor-pointer"
               )}
             >
-              Short answers
+              Short&nbsp;answers
             </div>
           </div>
           <Separator className="w-3/6" />

@@ -116,14 +116,10 @@ const Material: React.FC<QidProps> = ({ topic, instructions, totalmarks }) => {
   }
   return (
     <div className="p-4">
-      <div className="flex flex-col p-2 justify-center mb-5 items-center ">
-        <div className={`flex gap-5 `}>
-          <div>Topic : {topic}</div>
-          <br />
-        </div>
-        <div className="text-muted-foreground">
-          Mark your answer and submit the form
-        </div>
+      <div className="flex flex-col p-2 justify-center mb-5 items-center text-center">
+        <div>Topic : {topic}</div>
+
+        <div>Mark your answer and submit the form</div>
       </div>
       {instructions.split("\n").map((line, index) => (
         <div key={index}>{line}</div>

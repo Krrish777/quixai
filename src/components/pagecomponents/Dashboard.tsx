@@ -290,13 +290,15 @@ export const Dashboard = ({ children }: any) => {
                 ></path>
               </svg>
             </div>
-            <div className={`${styles.icon} `}>
-              <Image src="/logo.png" alt="logo" width={30} height={30} />
-              <div className={styles.name}>
-                <div>Quix</div>
-                <div className={styles.smallname}>.ai</div>
+            <Link href={"/dashboard"}>
+              <div className={`${styles.icon} `}>
+                <Image src="/logo.png" alt="logo" width={30} height={30} />
+                <div className={styles.name}>
+                  <div>Quix</div>
+                  <div className={styles.smallname}>.ai</div>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className={styles.icons}>

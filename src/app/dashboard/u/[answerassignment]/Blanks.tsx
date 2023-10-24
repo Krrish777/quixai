@@ -119,12 +119,10 @@ const Qid: React.FC<QidProps> = ({ questions, totalmarks, topic }) => {
     <>
       {topic && questions && selectedAnswers && (
         <div className="p-4">
-          <div className="flex flex-col p-2 justify-center mb-5 items-center ">
-            <div className={`flex gap-5 `}>
-              <div>Topic : {topic}</div>
-              <br />
-            </div>
-            <div className="text-muted-foreground">
+          <div className="flex flex-col p-2 justify-center mb-5 items-center text-center">
+            <div>Topic : {topic}</div>
+
+            <div>
               Mark your answer and submit the form
             </div>
           </div>

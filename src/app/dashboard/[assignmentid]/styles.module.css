@@ -4,20 +4,26 @@
 
 .gridone {
   position: sticky;
-  top: 6rem;
+  top: 4rem;
 }
 
-
-
-@media screen and (max-width: 1400px) {
+@media screen and (max-width: 400px) {
   .cls {
     max-width: 100vw;
+    overflow: scroll;
+  }
+  .pdfwidth {
+    min-width: 400px;
   }
 }
 
-@media screen and (max-width: 920px) {
+@media screen and (max-width: 1200px) {
   .gridone {
     position: static;
+  }
+
+  .email {
+    display: none;
   }
 
   .cls {
@@ -33,6 +39,7 @@
   .avt {
     display: none;
   }
+
   .names {
     margin-left: 0px;
   }

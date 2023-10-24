@@ -317,7 +317,7 @@ const Page = () => {
                           </div>
                         </div>
                       );
-                    } else if (type === "Fillinblanks") {
+                    } else if (type === "Fillinblanks" || "Shortanswers") {
                       return (
                         <div
                           key={index}
