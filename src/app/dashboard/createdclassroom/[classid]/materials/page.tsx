@@ -1,5 +1,4 @@
 "use client";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +39,7 @@ import { toast } from "@/components/ui/use-toast";
 import CryptoJS from "crypto-js";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface materials {
   id?: string;
@@ -51,10 +51,12 @@ interface materials {
 export default function InpuMaterialtFile() {
   const [user, setuser] = useState<User | null>(null);
   const [materials, setmaterials] = useState<materials[]>([]);
+  const [loading, setLoading] = useState(false);
   const params = useParams();
   const classid = params.classid;
 
   const fetchAnnouncements = useCallback(async () => {
+    setLoading(true);
     const CACHE_EXPIRATION = 10 * 60 * 1000;
     const currentTime = new Date().getTime();
 
@@ -121,6 +123,7 @@ export default function InpuMaterialtFile() {
         });
         console.log("No user is currently authenticated");
       }
+      setLoading(false);
     });
 
     return () => {
@@ -169,8 +172,8 @@ export default function InpuMaterialtFile() {
     if (values.file && !allowedTypes.includes(values.file.type)) {
       toast({
         variant: "destructive",
-        title: "Unsuported file",
-        description: "Temporirarly we support only pdf files",
+        title: "Unsupported file",
+        description: "Temporarily we support only PDF files",
       });
       return;
     }
@@ -199,7 +202,7 @@ export default function InpuMaterialtFile() {
               ).then(() => {
                 toast({
                   title: "Announcement sent!",
-                  description: "Announcement was Sucessfull sent",
+                  description: "Announcement was successfully sent",
                 });
                 form.setValue("context", "");
               });
@@ -221,7 +224,7 @@ export default function InpuMaterialtFile() {
             );
             toast({
               title: "No user authenticated",
-              description: "Pls login and try again",
+              description: "Please login and try again",
             });
           }
         })
@@ -261,7 +264,7 @@ export default function InpuMaterialtFile() {
                     <FormControl>
                       <Input
                         type="file"
-                        placeholder="Select a pdf file"
+                        placeholder="Select a PDF file"
                         {...fieldProps}
                         onChange={(event) =>
                           onChange(event.target.files && event.target.files[0])
@@ -280,7 +283,7 @@ export default function InpuMaterialtFile() {
                     <FormControl>
                       <Input
                         type="text"
-                        placeholder="Enter the conext to send"
+                        placeholder="Enter the context to send"
                         {...field}
                       />
                     </FormControl>
@@ -297,27 +300,34 @@ export default function InpuMaterialtFile() {
         </div>
         <Separator />
       </div>
-      <Table>
-        {/* <TableCaption>Materials for refrences</TableCaption> */}
-        <TableHeader>
-          <TableRow>
-            <TableHead>Context</TableHead>
-            <TableHead>View Material</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {materials.map((material) => (
-            <TableRow key={material.id}>
-              <TableCell>{material.context}</TableCell>
-              <TableCell className="font-medium">
-                <a href={material.file} download>
-                  &nbsp; View Material
-                </a>
-              </TableCell>
+      {loading ? (
+        <Skeleton className="w-[100%] h-[5rem] mt-4 rounded-sm" />
+      ) : materials.length === 0 ? (
+        <div className={`${styles.emptyMessage} p-5 mt-10 w-full text-center`}>
+          No materials found
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Context</TableHead>
+              <TableHead>View Material</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {materials.map((material) => (
+              <TableRow key={material.id}>
+                <TableCell>{material.context}</TableCell>
+                <TableCell className="font-medium">
+                  <a href={material.file} download>
+                    &nbsp; View Material
+                  </a>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

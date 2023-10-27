@@ -15,6 +15,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Classroom = {
   id: string;
@@ -37,6 +38,7 @@ const Page = () => {
   const params = useParams();
   const [Classname, setClasssname] = useState<Student[]>([]);
   const [user, setuser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // New loading state
   const classid = Array.isArray(params.classid)
     ? params.classid.join("")
     : params.classid;
@@ -71,6 +73,7 @@ const Page = () => {
             if (foundObject) {
               setClasssname(foundObject?.students || []);
             }
+            setIsLoading(false); // Data loaded, set loading state to false
           } else {
             try {
               const q = query(
@@ -107,11 +110,14 @@ const Page = () => {
               if (foundObject) {
                 setClasssname(foundObject?.students || []);
               }
+              setIsLoading(false); // Data loaded, set loading state to false
             } catch (error) {
+              setIsLoading(false); // Data loaded, set loading state to false
               console.log("there was error");
             }
           }
         } else {
+          setIsLoading(false); // Data loaded, set loading state to false
           console.log("No user is currently authenticated");
         }
       });
@@ -128,22 +134,34 @@ const Page = () => {
         <CardTitle>Students Details </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
-          {Classname.map((item) => (
-            <div className="flex items-center" key={item.uid}>
-              <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
-                <AvatarImage src={`/${randomImage}`} alt="Avatar" />
-                <AvatarFallback>JL</AvatarFallback>
-              </Avatar>
-              <div className="ml-4 space-y-1">
-                <p className="text-sm font-medium leading-none">{item.name}</p>
-                <p className={`text-sm text-muted-foreground ${styles.email}`}>
-                  {item.email}
-                </p>
+        {isLoading ? (
+          <Skeleton className="w-[100%] h-[5rem] rounded-sm" />
+        ) : Classname.length === 0 ? (
+          <div className={`${styles.emptyMessage} p-5 w-full text-center`}>
+            No students have joined
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {Classname.map((item) => (
+              <div className="flex items-center" key={item.uid}>
+                <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
+                  <AvatarImage src={`/${randomImage}`} alt="Avatar" />
+                  <AvatarFallback>JL</AvatarFallback>
+                </Avatar>
+                <div className="ml-4 space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {item.name}
+                  </p>
+                  <p
+                    className={`text-sm text-muted-foreground ${styles.email}`}
+                  >
+                    {item.email}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

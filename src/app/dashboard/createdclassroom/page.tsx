@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import styles from "@/components/pagecomponents/class.module.css";
 import Link from "next/link";
@@ -9,6 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { Icons } from "@/components/ui/Icons";
 import { toast } from "@/components/ui/use-toast";
 import CryptoJS from "crypto-js";
+import Loading from "./loading";
 
 type Classroom = {
   id: string;
@@ -24,6 +24,7 @@ type Classroom = {
 
 export default function Createddclassroom() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const CACHE_EXPIRATION = 10 * 60 * 1000;
@@ -50,7 +51,7 @@ export default function Createddclassroom() {
             const q = query(
               collection(db, "Classrooms"),
               where("Createdby", "==", authUser.uid),
-              orderBy('Createddata')
+              orderBy("Createddata")
             );
 
             const querySnapshot = await getDocs(q);
@@ -74,7 +75,7 @@ export default function Createddclassroom() {
 
             setClassrooms(classroomsData);
           } catch (error) {
-            console.log(error)
+            console.log(error);
             toast({
               variant: "destructive",
               title: "Uh oh! Something went wrong.",
@@ -89,6 +90,8 @@ export default function Createddclassroom() {
         });
         console.log("No user is currently authenticated");
       }
+
+      setLoading(false); // Set loading to false when data is fetched
     });
 
     return () => {
@@ -97,27 +100,37 @@ export default function Createddclassroom() {
   }, []);
 
   return (
-    <div className={styles.grid}>
-      {classrooms.map((classroom) => (
-        <Link
-          key={classroom.id}
-          href={`/dashboard/createdclassroom/${classroom.id}/announcement`}
-        >
-          <div className={`${styles.class}  rounded-sm border`}>
-            <div className={`${styles.id} bg-secondary rounded-t-sm`}>
-              <Icons.Classcard />
-              <div>
-                <div>{classroom.Classname}</div>
-                <div>{classroom.Section}</div>
+    <div>
+      {loading ? (
+        <Loading />
+      ) : classrooms.length === 0 ? (
+        <div className={`${styles.emptyMessage} p-5 mt-10 w-full text-center`}>
+          No classrooms found. Create a Classroom
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {classrooms.map((classroom) => (
+            <Link
+              key={classroom.id}
+              href={`/dashboard/createdclassroom/${classroom.id}/announcement`}
+            >
+              <div className={`${styles.class}  rounded-sm border`}>
+                <div className={`${styles.id} bg-secondary rounded-t-sm`}>
+                  <Icons.Classcard />
+                  <div>
+                    <div>{classroom.Classname}</div>
+                    <div>{classroom.Section}</div>
+                  </div>
+                </div>
+                <div className="flex flex-col p-3 gap-2">
+                  <div>Teacher : {classroom.TeacherName}</div>
+                  <div>Subject : {classroom.Subject}</div>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col p-3 gap-2">
-              <div>Teacher : {classroom.TeacherName}</div>
-              <div>Subject : {classroom.Subject}</div>
-            </div>
-          </div>
-        </Link>
-      ))}
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

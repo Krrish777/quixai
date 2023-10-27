@@ -37,6 +37,7 @@ import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import { toast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SubmittedAnswer {
   question: string;
@@ -62,6 +63,7 @@ interface SubmittedAssignment {
 const Page = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [updateingAssignmentId, setUpdateingAssignmentId] = useState<string>();
+  const [loading, setLoading] = useState(true);
   const [updateingUserMarks, setupdateingUserMarks] = useState<number>();
   const [updateingTotalMarks, setupdateingTotalMarks] = useState<number>();
   const [updateingUserNewMarks, setupdateingUserNewMarks] = useState<number>();
@@ -104,8 +106,10 @@ const Page = () => {
       });
 
       setSubmittedAssignments(data);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setLoading(false);
     }
   }
 
@@ -218,46 +222,60 @@ const Page = () => {
           </CardHeader>
           <CardContent className={` ${styles.stdname}`}>
             <div className="space-y-8">
-              {submittedAssignments.map((assignment) => (
-                <div className="flex items-center" key={assignment.id}>
-                  <Avatar
-                    className={`flex h-9 w-9 items-center justify-center space-y-0 border cursor-pointer ${styles.avt}`}
-                    onClick={() => {
-                      profileview(assignment.id);
-                    }}
-                  >
-                    <AvatarImage src="/02.png" alt="Avatar" />
-                    <AvatarFallback>JL</AvatarFallback>
-                  </Avatar>
-                  <div
-                    className={`ml-4 space-y-1 cursor-pointer ${styles.names}`}
-                    onClick={() => {
-                      profileview(assignment.id);
-                    }}
-                  >
-                    <div className="text-sm font-medium leading-none ">
-                      {assignment.studentName}
-                    </div>
-                    <div
-                      className={`text-sm text-muted-foreground ${styles.email}`}
-                    >
-                      {assignment.studentEmail}
-                    </div>
-                  </div>
-                  <div
-                    className="ml-auto font-medium cursor-pointer"
-                    onClick={() => {
-                      onupdate(
-                        assignment.id,
-                        assignment.scoredMarks,
-                        assignment.totalmarks
-                      );
-                    }}
-                  >
-                    {assignment.scoredMarks}/{assignment.totalmarks}
-                  </div>
+              {loading ? (
+                <>
+                  <Skeleton className="w-[100%] h-[5rem] rounded-sm" />
+                </>
+              ) : submittedAssignments.length === 0 ? (
+                <div
+                  className={`${styles.emptyMessage} p-5 w-full text-center`}
+                >
+                  No students found
                 </div>
-              ))}
+              ) : (
+                <>
+                  {submittedAssignments.map((assignment) => (
+                    <div className="flex items-center" key={assignment.id}>
+                      <Avatar
+                        className={`flex h-9 w-9 items-center justify-center space-y-0 border cursor-pointer ${styles.avt}`}
+                        onClick={() => {
+                          profileview(assignment.id);
+                        }}
+                      >
+                        <AvatarImage src="/02.png" alt="Avatar" />
+                        <AvatarFallback>JL</AvatarFallback>
+                      </Avatar>
+                      <div
+                        className={`ml-4 space-y-1 cursor-pointer ${styles.names}`}
+                        onClick={() => {
+                          profileview(assignment.id);
+                        }}
+                      >
+                        <div className="text-sm font-medium leading-none ">
+                          {assignment.studentName}
+                        </div>
+                        <div
+                          className={`text-sm text-muted-foreground ${styles.email}`}
+                        >
+                          {assignment.studentEmail}
+                        </div>
+                      </div>
+                      <div
+                        className="ml-auto font-medium cursor-pointer"
+                        onClick={() => {
+                          onupdate(
+                            assignment.id,
+                            assignment.scoredMarks,
+                            assignment.totalmarks
+                          );
+                        }}
+                      >
+                        {assignment.scoredMarks}/{assignment.totalmarks}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

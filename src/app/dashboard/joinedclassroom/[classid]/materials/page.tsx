@@ -12,10 +12,11 @@ import styles from "./styles.module.css";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { auth, db, } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { toast } from "@/components/ui/use-toast";
 import CryptoJS from "crypto-js";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface materials {
   id?: string;
@@ -29,6 +30,7 @@ export default function InpuMaterialtFile() {
   const [materials, setmaterials] = useState<materials[]>([]);
   const params = useParams();
   const classid = params.classid;
+  const [loading, setLoading] = useState(true);
 
   const fetchAnnouncements = useCallback(async () => {
     const CACHE_EXPIRATION = 10 * 60 * 1000;
@@ -97,6 +99,7 @@ export default function InpuMaterialtFile() {
         });
         console.log("No user is currently authenticated");
       }
+      setLoading(false);
     });
 
     return () => {
@@ -112,27 +115,34 @@ export default function InpuMaterialtFile() {
 
   return (
     <div className={` overflow-hidden ${styles.tbc}`}>
-      <Table>
-        {/* <TableCaption>Materials for refrences</TableCaption> */}
-        <TableHeader>
-          <TableRow>
-            <TableHead>Context</TableHead>
-            <TableHead>View Material</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {materials.map((material) => (
-            <TableRow key={material.id}>
-              <TableCell>{material.context}</TableCell>
-              <TableCell className="font-medium">
-                <a href={material.file} download>
-                  &nbsp; View Material
-                </a>
-              </TableCell>
+      {loading ? (
+        <Skeleton className="w-[100%] h-[5rem] mt-4 rounded-sm" />
+      ) : materials.length === 0 ? (
+        <div className={`${styles.emptyMessage} p-5 mt-10 w-full text-center`}>
+          No materials found
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Context</TableHead>
+              <TableHead>View Material</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {materials.map((material) => (
+              <TableRow key={material.id}>
+                <TableCell>{material.context}</TableCell>
+                <TableCell className="font-medium">
+                  <a href={material.file} download>
+                    &nbsp; View Material
+                  </a>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }

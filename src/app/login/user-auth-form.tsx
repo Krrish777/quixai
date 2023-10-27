@@ -64,7 +64,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         )}
         Google
       </Button>
-      <Button
+      {/* <Button
         variant="outline"
         type="button"
         onClick={() => signInWithProvider(new GithubAuthProvider())}
@@ -76,7 +76,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           <Icons.gitHub className="mr-2 h-4 w-4" />
         )}
         Github
-      </Button>
+      </Button> */}
     </div>
   );
 }

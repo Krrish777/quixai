@@ -35,6 +35,7 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { User, onAuthStateChanged } from "firebase/auth";
 import CryptoJS from "crypto-js";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Announcement = {
   id?: string;
@@ -58,6 +59,7 @@ const Announcement = () => {
   const [user, setuser] = useState<User | null>(null);
   const params = useParams();
   const classid = params.classid;
+  const [loading, setLoading] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -135,6 +137,7 @@ const Announcement = () => {
         });
         console.log("No user is currently authenticated");
       }
+      setLoading(false);
     });
 
     return () => {
@@ -192,7 +195,7 @@ const Announcement = () => {
     <div className="p-2 flex gap-3 flex-col">
       <Card>
         <CardHeader>
-          <CardTitle>Send a Announcement</CardTitle>
+          <CardTitle>Send an Announcement</CardTitle>
           <CardDescription>Anyone in the class can view it.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -222,25 +225,41 @@ const Announcement = () => {
           </div>
           <Separator className="my-4" />
           <div className="space-y-4">
-            {announcements.map((announcement, index) => (
-              <div className="grid gap-6 bg-accent rounded-sm p-2" key={index}>
-                <div className="cursor-pointer">
-                  <div className="text-muted-foreground text-[15px]">
-                    Announcement :
-                  </div>
-                  <div className="text-muted-foreground text-[13px]">
-                    {new Date(announcement.createdAt).toLocaleDateString(
-                      undefined,
-                      { year: "numeric", month: "short", day: "numeric" }
-                    )}
-                  </div>
-                  <div className="text-muted-foreground text-[15px] hover:text-foreground">
-                    {announcement.Message.charAt(0).toUpperCase() +
-                      announcement.Message.slice(1)}
+            {loading ? (
+              <>
+                <Skeleton className="w-[100%] h-[5rem] rounded-sm" />
+                <Skeleton className="w-[100%] h-[5rem] rounded-sm" />
+              </>
+            ) : announcements.length === 0 ? (
+              <div
+                className={`${styles.emptyMessage} p-5 mt-10 w-full text-center`}
+              >
+                No announcements found. Be the first one to send.
+              </div>
+            ) : (
+              announcements.map((announcement, index) => (
+                <div
+                  className="grid gap-6 bg-accent rounded-sm p-2"
+                  key={index}
+                >
+                  <div className="cursor-pointer">
+                    <div className="text-muted-foreground text-[15px]">
+                      Announcement :
+                    </div>
+                    <div className="text-muted-foreground text-[13px]">
+                      {new Date(announcement.createdAt).toLocaleDateString(
+                        undefined,
+                        { year: "numeric", month: "short", day: "numeric" }
+                      )}
+                    </div>
+                    <div className="text-muted-foreground text-[15px] hover:text-foreground">
+                      {announcement.Message.charAt(0).toUpperCase() +
+                        announcement.Message.slice(1)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
