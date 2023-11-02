@@ -305,7 +305,7 @@ export default function ProfileForm() {
                 name="file"
                 render={({ field: { value, onChange, ...fieldProps } }) => (
                   <FormItem>
-                    <FormLabel>Text</FormLabel>
+                    <FormLabel>Pdf</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
