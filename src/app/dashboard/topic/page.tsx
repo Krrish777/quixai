@@ -215,7 +215,7 @@ export default function ProfileForm() {
             </p>
           </div>
           <div
-            className={`flex space-x-2 inline-flex  justify-center rounded-md bg-muted p-1 text-muted-foreground place-items-center ${styles.tabs} mb-4`}
+            className={` space-x-2 inline-flex  justify-center rounded-md bg-muted p-1 text-muted-foreground place-items-center ${styles.tabs} mb-4`}
           >
             <div
               onClick={() => {
