@@ -20,5 +20,5 @@ module.exports = nextConfig
 
 
 // module.exports = {
-//     reactStrictMode: false,
+//     reactStrictMode: false,  //check
 // }
