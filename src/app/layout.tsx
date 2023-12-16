@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter as FontSans } from "next/font/google"
+import { Inter as FontSans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 // const inter = Inter({ subsets: ["latin"] });
 import { Toaster } from "@/components/ui/toaster";
@@ -27,7 +27,7 @@ const fontCode = localFont({
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
-})
+});
 
 export default function RootLayout({
   children,
@@ -36,11 +36,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6142492019505715"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body
         className={cn(
           `min-h-screen bg-background font-sans antialiased`,
           fontCode.variable,
-          fontSans.variable,
+          fontSans.variable
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
