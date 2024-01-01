@@ -201,8 +201,8 @@ export default function InpuMaterialtFile() {
                 Datatobeadded
               ).then(() => {
                 toast({
-                  title: "Announcement sent!",
-                  description: "Announcement was successfully sent",
+                  title: "File uploaded",
+                  description: "File uploaded sucessfully!",
                 });
                 form.setValue("context", "");
               });
