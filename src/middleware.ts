@@ -41,3 +41,6 @@ export async function middleware(request: NextRequest, response: NextResponse) {
 export const config = {
   matcher: ["/dashboard/:path*", "/login", "/signup", "/"],
 };
+
+
+// Reference = https://dev.to/geiel/how-to-use-firebase-authentication-in-nextjs-13-client-and-server-side-1bbn
