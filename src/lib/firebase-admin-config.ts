@@ -8,8 +8,8 @@ if (!process.env.FIREBASE_PRIVATE_KEY) {
 
 const firebaseAdminConfig = {
     credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_PRIVATE_CLIENT_EMAIL,
+        projectId:"quixai-dev",
+        clientEmail: "firebase-adminsdk-ykjza@quixai-dev.iam.gserviceaccount.com",
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
     })
 }
