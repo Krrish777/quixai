@@ -1,12 +1,16 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import firebaseConfig from './firebaseConfig.json';
 
+
+
+if (!process.env.FIREBASE_PRIVATE_KEY) {
+    throw new Error('FIREBASE_PRIVATE_KEY environment variable is not set.');
+}
 
 const firebaseAdminConfig = {
     credential: cert({
-        projectId: firebaseConfig.projectId,
-        clientEmail: firebaseConfig.clientEmail,
-        privateKey: firebaseConfig.privateKey.replace(/\\n/g, '\n')
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_PRIVATE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
     })
 }
 
