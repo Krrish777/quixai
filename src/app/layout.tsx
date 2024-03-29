@@ -8,6 +8,9 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import localFont from "next/font/local";
 import { cn } from "@/lib/utils";
+import { Analytics } from '@vercel/analytics/react';
+
+
 export const metadata: Metadata = {
   title: "Quix.ai",
   description: "A modern way to Teach",
@@ -52,6 +55,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          <Analytics />
           <Toaster />
         </ThemeProvider>
       </body>
